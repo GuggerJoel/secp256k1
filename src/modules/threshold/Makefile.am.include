@@ -1,0 +1,4 @@
+include_HEADERS += include/secp256k1_paillier.h
+noinst_HEADERS += src/modules/threshold/der_impl.h
+noinst_HEADERS += src/modules/threshold/paillier_impl.h
+noinst_HEADERS += src/modules/threshold/paillier_tests.h
