@@ -171,7 +171,7 @@ int secp256k1_paillier_message_parse(secp256k1_paillier_encrypted_message *messa
     return 0;
 }
 
-unsigned char* secp256k1_paillier_message_serialize(size_t *outputlen, secp256k1_paillier_encrypted_message *message){
+unsigned char* secp256k1_paillier_message_serialize(size_t *outputlen, const secp256k1_paillier_encrypted_message *message){
     unsigned char *outputdata = NULL, *data = NULL, *len = NULL; size_t dlenght = 0, llenght = 0;
     /**
     HEEncryptedMessage ::= SEQUENCE {
@@ -188,20 +188,37 @@ unsigned char* secp256k1_paillier_message_serialize(size_t *outputlen, secp256k1
     return outputdata;
 }
 
-int secp256k1_paillier_encrypt(secp256k1_paillier_encrypted_message *res, const unsigned char *data, size_t lenght, secp256k1_paillier_pubkey *pubkey, secp256k1_paillier_nonce_function noncefp) {
-    mpz_t message, l1, l2, l3;
-    if (!noncefp(res->nonce, pubkey)) { return 0; }
-    mpz_inits(message, l1, l2, l3, NULL);
-    mpz_import(message, lenght, 1, sizeof(data[0]), 1, 0, data);
-    mpz_powm(l1, pubkey->generator, message, pubkey->bigModulus);
-    mpz_powm(l2, res->nonce, pubkey->modulus, pubkey->bigModulus);
-    mpz_mul(l3, l1, l2);
-    mpz_mod(res->message, l3, pubkey->bigModulus);
-    mpz_clears(message, l1, l2, l3, NULL);
-    return 1;
+int secp256k1_paillier_encrypt_scalar(secp256k1_paillier_encrypted_message *res, const secp256k1_scalar *scalar, const secp256k1_paillier_pubkey *pubkey, const secp256k1_paillier_nonce_function noncefp) {
+    unsigned char data[32];
+    secp256k1_scalar_get_b32(data, scalar);
+    return secp256k1_paillier_encrypt(res, data, (size_t)32, pubkey, noncefp);
 }
 
-void secp256k1_paillier_decrypt(mpz_t message, mpz_t cipher, secp256k1_paillier_privkey *privkey) {
+int secp256k1_paillier_encrypt(secp256k1_paillier_encrypted_message *res, const unsigned char *data, const size_t lenght, const secp256k1_paillier_pubkey *pubkey, const secp256k1_paillier_nonce_function noncefp) {
+    mpz_t message;
+    int ret = 0;
+    mpz_init(message);
+    mpz_import(message, lenght, 1, sizeof(data[0]), 1, 0, data);
+    ret = secp256k1_paillier_encrypt_mpz(res, &message, pubkey, noncefp);
+    mpz_clear(message);
+    return ret;
+}
+
+int secp256k1_paillier_encrypt_mpz(secp256k1_paillier_encrypted_message *res, const mpz_t *m, const secp256k1_paillier_pubkey *pubkey, const secp256k1_paillier_nonce_function noncefp) {
+    mpz_t l1, l2, l3;
+    int ret = noncefp(res->nonce, pubkey->modulus);
+    if (ret) {
+        mpz_inits(l1, l2, l3, NULL);
+        mpz_powm(l1, pubkey->generator, *m, pubkey->bigModulus);
+        mpz_powm(l2, res->nonce, pubkey->modulus, pubkey->bigModulus);
+        mpz_mul(l3, l1, l2);
+        mpz_mod(res->message, l3, pubkey->bigModulus);
+        mpz_clears(l1, l2, l3, NULL);
+    }
+    return ret;
+}
+
+void secp256k1_paillier_decrypt(mpz_t message, mpz_t cipher, const secp256k1_paillier_privkey *privkey) {
     mpz_t l1, l2; mpz_inits(l1, l2, NULL);
     mpz_powm(l1, cipher, privkey->privateExponent, privkey->bigModulus);
     mpz_sub_ui(l2, l1, 1);
@@ -211,11 +228,11 @@ void secp256k1_paillier_decrypt(mpz_t message, mpz_t cipher, secp256k1_paillier_
     mpz_clears(l1, l2, NULL);
 }
 
-void secp256k1_paillier_mult(mpz_t res, mpz_t cipher, mpz_t scalar, secp256k1_paillier_pubkey *pubkey) {
+void secp256k1_paillier_mult(mpz_t res, mpz_t cipher, mpz_t scalar, const secp256k1_paillier_pubkey *pubkey) {
     mpz_powm(res, cipher, scalar, pubkey->bigModulus);
 }
 
-void secp256k1_paillier_add(mpz_t res, mpz_t op1, mpz_t op2, secp256k1_paillier_pubkey *pubkey) {
+void secp256k1_paillier_add(mpz_t res, mpz_t op1, mpz_t op2, const secp256k1_paillier_pubkey *pubkey) {
     mpz_t l1; mpz_init(l1);
     mpz_mul(l1, op1, op2);
     mpz_mod(res, l1, pubkey->bigModulus);

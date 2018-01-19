@@ -20,8 +20,8 @@
 #define TRACEVAR(x,msg)
 #endif /* TRACE */
 
-static int paillier_nonce_function(mpz_t nonce, secp256k1_paillier_pubkey *pubkey) {
-    char rnd[64];
+static int paillier_nonce_function(mpz_t nonce, const mpz_t mod) {
+    char rnd[128];
     int counter, fd;
     mpz_t gcd, seed; gmp_randstate_t r_state;
     counter = 0; fd = 0;
@@ -32,18 +32,18 @@ static int paillier_nonce_function(mpz_t nonce, secp256k1_paillier_pubkey *pubke
     if ( (fd = open ("/dev/urandom", O_RDONLY)) == -1) {
         return -1; 
     }
-    if (read(fd, rnd, 64) != 64 ) {
+    if (read(fd, rnd, 128) != 128 ) {
         if (close(fd)) {
             return 0;
         }
         return -1;
     }
-    rnd[0] |= 0x80;
-    mpz_import (seed, 64, 1, 1, 1, 0, rnd);
+    /*rnd[0] |= 0x80;*/
+    mpz_import(seed, 128, 1, 1, 1, 0, rnd);
     gmp_randseed(r_state, seed);
     do {
-        mpz_urandomm(nonce, r_state, pubkey->modulus);
-        mpz_gcd(gcd, nonce, pubkey->modulus);
+        mpz_urandomm(nonce, r_state, mod);
+        mpz_gcd(gcd, nonce, mod);
         if (counter > 10) {
             printf("%s\n", "Nonce failed");
             return 0;

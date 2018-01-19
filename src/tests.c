@@ -4409,6 +4409,8 @@ void run_ecdsa_openssl(void) {
 
 #ifdef ENABLE_MODULE_THRESHOLD
 # include "modules/threshold/paillier_tests.h"
+# include "modules/threshold/eczkp_tests.h"
+# include "modules/threshold/threshold_tests.h"
 #endif
 
 int main(int argc, char **argv) {
@@ -4532,6 +4534,10 @@ int main(int argc, char **argv) {
 #ifdef ENABLE_MODULE_THRESHOLD
     /* Paillier homomorphic system tests */
     run_paillier_tests();
+    /* Zero-knowledge proofs tests */
+    run_eczkp_tests();
+    /* Tests tests */
+    run_threshold_tests();
 #endif
 
     secp256k1_rand256(run32);

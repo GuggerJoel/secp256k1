@@ -34,6 +34,18 @@ int secp256k1_der_parse_struct(const unsigned char *data, size_t datalen, unsign
     return 0;
 }
 
+int secp256k1_der_parse_struct_len(const unsigned char *data, unsigned long *lenght) {
+    unsigned long len, pos, off;
+    len = pos = off = 0;
+    if (data[pos] == 0x30) {
+        pos += 1;
+        secp256k1_der_parse_len(data, &pos, &len, &off);
+        *lenght = len + off + 1;
+        return 1;
+    }
+    return 0;
+}
+
 int secp256k1_der_parse_int(const unsigned char *data, size_t datalen, unsigned long *pos, mpz_t res, unsigned long *offset) {
     unsigned long lenght, loffset;
     lenght = 0;
@@ -42,6 +54,22 @@ int secp256k1_der_parse_int(const unsigned char *data, size_t datalen, unsigned 
         secp256k1_der_parse_len(data, pos, &lenght, &loffset);
         if (*pos + lenght <= datalen) {
             mpz_import(res, (size_t)lenght, 1, sizeof(data[0]), 1, 0, &data[*pos]);
+            *offset = 1 + loffset + lenght;
+            *pos += lenght;
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int secp256k1_der_parse_octet_string(const unsigned char *data, size_t datalen, size_t maxlen, unsigned long *pos, unsigned char *res, unsigned long *offset) {
+    unsigned long lenght, loffset;
+    lenght = 0;
+    if (data[*pos] == 0x04) {
+        *pos += 1;
+        secp256k1_der_parse_len(data, pos, &lenght, &loffset);
+        if (lenght <= maxlen && *pos + lenght <= datalen) {
+            memcpy(res, &data[*pos], (size_t)lenght);
             *offset = 1 + loffset + lenght;
             *pos += lenght;
             return 1;
