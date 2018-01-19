@@ -49,7 +49,7 @@ typedef struct {
 
 typedef int (*secp256k1_paillier_nonce_function)(
     mpz_t nonce,
-    secp256k1_paillier_pubkey *pubkey
+    const mpz_t mod
 );
 
 secp256k1_paillier_privkey* secp256k1_paillier_privkey_create(void);
@@ -58,7 +58,6 @@ secp256k1_paillier_pubkey* secp256k1_paillier_pubkey_create(void);
 secp256k1_paillier_pubkey* secp256k1_paillier_pubkey_get(const secp256k1_paillier_privkey *privkey);
 void secp256k1_paillier_privkey_reset(secp256k1_paillier_privkey *privkey);
 void secp256k1_paillier_pubkey_reset(secp256k1_paillier_pubkey *pubkey);
-
 void secp256k1_paillier_privkey_destroy(secp256k1_paillier_privkey *privkey);
 void secp256k1_paillier_pubkey_destroy(secp256k1_paillier_pubkey *pubkey);
 
@@ -101,22 +100,36 @@ int secp256k1_paillier_message_parse(
 
 unsigned char* secp256k1_paillier_message_serialize(
     size_t *outputlen,
-    secp256k1_paillier_encrypted_message *message
+    const secp256k1_paillier_encrypted_message *message
 );
 
 int secp256k1_paillier_encrypt(
     secp256k1_paillier_encrypted_message *res,
     const unsigned char *data,
-    size_t lenght,
-    secp256k1_paillier_pubkey *pubkey,
-    secp256k1_paillier_nonce_function noncefp
+    const size_t lenght,
+    const secp256k1_paillier_pubkey *pubkey,
+    const secp256k1_paillier_nonce_function noncefp
 );
 
-void secp256k1_paillier_decrypt(mpz_t message, mpz_t cipher, secp256k1_paillier_privkey *privkey);
+int secp256k1_paillier_encrypt_mpz(
+    secp256k1_paillier_encrypted_message *res, 
+    const mpz_t *m, 
+    const secp256k1_paillier_pubkey *pubkey, 
+    const secp256k1_paillier_nonce_function noncefp
+);
 
-void secp256k1_paillier_mult(mpz_t res, mpz_t cipher, mpz_t scalar, secp256k1_paillier_pubkey *pubkey);
+int secp256k1_paillier_encrypt_scalar(
+    secp256k1_paillier_encrypted_message *res,
+    const secp256k1_scalar *scalar,
+    const secp256k1_paillier_pubkey *pubkey,
+    const secp256k1_paillier_nonce_function noncefp
+);
 
-void secp256k1_paillier_add(mpz_t res, mpz_t op1, mpz_t op2, secp256k1_paillier_pubkey *pubkey);
+void secp256k1_paillier_decrypt(mpz_t message, mpz_t cipher, const secp256k1_paillier_privkey *privkey);
+
+void secp256k1_paillier_mult(mpz_t res, mpz_t cipher, mpz_t scalar, const secp256k1_paillier_pubkey *pubkey);
+
+void secp256k1_paillier_add(mpz_t res, mpz_t op1, mpz_t op2, const secp256k1_paillier_pubkey *pubkey);
 
 #ifdef __cplusplus
 }

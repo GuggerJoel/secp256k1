@@ -600,4 +600,6 @@ int secp256k1_ec_pubkey_combine(const secp256k1_context* ctx, secp256k1_pubkey *
 
 #ifdef ENABLE_MODULE_THRESHOLD
 # include "modules/threshold/paillier_impl.h"
+# include "modules/threshold/eczkp_impl.h"
+# include "modules/threshold/threshold_impl.h"
 #endif
