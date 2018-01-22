@@ -62,16 +62,16 @@ int secp256k1_der_parse_int(const unsigned char *data, size_t datalen, unsigned 
     return 0;
 }
 
-int secp256k1_der_parse_octet_string(const unsigned char *data, size_t datalen, size_t maxlen, unsigned long *pos, unsigned char *res, unsigned long *offset) {
-    unsigned long lenght, loffset;
-    lenght = 0;
+int secp256k1_der_parse_octet_string(const unsigned char *data, size_t datalen, size_t maxlen, unsigned long *pos, unsigned char *res, unsigned long *lenght, unsigned long *offset) {
+    unsigned long loffset;
+    *lenght = 0;
     if (data[*pos] == 0x04) {
         *pos += 1;
-        secp256k1_der_parse_len(data, pos, &lenght, &loffset);
-        if (lenght <= maxlen && *pos + lenght <= datalen) {
-            memcpy(res, &data[*pos], (size_t)lenght);
-            *offset = 1 + loffset + lenght;
-            *pos += lenght;
+        secp256k1_der_parse_len(data, pos, lenght, &loffset);
+        if (*lenght <= maxlen && *pos + *lenght <= datalen) {
+            memcpy(res, &data[*pos], (size_t)*lenght);
+            *offset = 1 + loffset + *lenght;
+            *pos += *lenght;
             return 1;
         }
     }
@@ -92,6 +92,7 @@ unsigned char* secp256k1_der_serialize_len(size_t *datalen, size_t lenght) {
     if (lenght >= 0x80) {
         data[0] = (uint8_t)longsize | 0x80;
         memcpy(&data[1], serialize, longsize);
+        free(serialize);
     } else {
         data[0] = (uint8_t)lenght;
     }
@@ -114,6 +115,53 @@ unsigned char* secp256k1_der_serialize_int(size_t *datalen, const mpz_t op) {
     } else {
         memcpy(&data[1 + sizelen], res, countp);
     }
+    free(res);
+    free(sizedata);
+    return data;
+}
+
+unsigned char* secp256k1_der_serialize_scalar(size_t *datalen, const secp256k1_scalar *op) {
+    unsigned char *data = NULL;
+    *datalen = 2 + 32;
+    data = malloc(*datalen * sizeof(unsigned char));
+    data[0] = 0x02;
+    data[1] = 0x20;
+    secp256k1_scalar_get_b32(&data[2], op);
+    return data;
+}
+
+unsigned char* secp256k1_der_serialize_octet_string(size_t *outlen, const unsigned char *op, const size_t datalen) {
+    unsigned char *data = NULL, *len = NULL;
+    size_t lensize = 0;
+    len = secp256k1_der_serialize_len(&lensize, datalen);
+    *outlen = 1 + lensize + datalen;
+    data = malloc(*outlen * sizeof(unsigned char));
+    data[0] = 0x04;
+    memcpy(&data[1], len, lensize);
+    memcpy(&data[1 + lensize], op, datalen);
+    free(len);
+    return data;
+}
+
+unsigned char* secp256k1_der_serialize_empty_octet_string(size_t *outlen) {
+    unsigned char *data = NULL;
+    *outlen = 2;
+    data = malloc(*outlen * sizeof(unsigned char));
+    data[0] = 0x04;
+    data[1] = 0x00;
+    return data;
+}
+
+unsigned char* secp256k1_der_serialize_sequence(size_t *outlen, const unsigned char *op, const size_t datalen) {
+    unsigned char *data = NULL, *len = NULL;
+    size_t lensize = 0;
+    len = secp256k1_der_serialize_len(&lensize, datalen);
+    *outlen = 1 + lensize + datalen;
+    data = malloc(*outlen * sizeof(unsigned char));
+    data[0] = 0x30;
+    memcpy(&data[1], len, lensize);
+    memcpy(&data[1 + lensize], op, datalen);
+    free(len);
     return data;
 }
 

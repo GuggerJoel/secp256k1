@@ -28,6 +28,16 @@ void tracescal(secp256k1_scalar s) {
     mpz_clears(num, NULL);
 }
 
+void tracechar(unsigned char *d, size_t l) {
+    unsigned long i = 0;
+    for (; i < l; i++) {
+        printf("0x%02hhX, ", d[i]);
+        if ((i+1) % 16 == 0)
+            printf("\n");
+    }
+    printf("\n> %lu\n", l);
+}
+
 void tracepub(secp256k1_context *cctx, secp256k1_pubkey p) {
     int i = 0;
     size_t size = 65;
@@ -51,6 +61,9 @@ void traceparam(secp256k1_context *cctx, secp256k1_threshold_signature_params p,
 }
 
 void run_threshold_tests(void) {
+    unsigned char *output = NULL;
+    size_t outputlen = 0;
+
     secp256k1_ecdsa_signature sig, normsig;
     secp256k1_pubkey alicepubkey, bobpubkey;
     secp256k1_scalar alicesecshare, bobsecshare;
@@ -554,18 +567,59 @@ void run_threshold_tests(void) {
         0x18, 0x34, 0xa0, 0x07, 0x06, 0x05, 0x2b, 0x81, 0x04, 0x00, 0x0a
     };
 
+    secp256k1_threshold_params_clear(&aliceparam);
+    secp256k1_threshold_params_clear(&bobparam);
+
     CHECK(secp256k1_threshold_privkey_parse(tctx, &alicesecshare, alicepaillierkey, bobpaillierpub, &alicepubkey, raw_threshold_privkey, 3754) == 1);
     CHECK(secp256k1_threshold_privkey_parse(tctx, &bobsecshare, bobpaillierkey, alicepaillierpub, &bobpubkey, raw_threshold_bobprivkey, 3755) == 1);
+    
+    output = secp256k1_threshold_params_serialize(tctx, &outputlen, &aliceparam, SECP256K1_THRESHOLD_PARAMS_SHORT);
+    secp256k1_threshold_params_clear(&aliceparam);
+    CHECK(secp256k1_threshold_params_parse(tctx, &aliceparam, output, outputlen) == 1);
 
     CHECK(secp256k1_threshold_call_create(tctx, &callmsg, &aliceparam, &alicesecshare, alicepaillierpub, msg32, secp256k1_paillier_nonce_function_default) == 1);
 
-    CHECK(secp256k1_threshold_call_recieved(tctx, &challengemsg, &bobparam, &callmsg, &bobsecshare, msg32) == 1);
+    /*TRACEVAR(callmsg.alpha->message, "callmsg.alpha->message");
+    TRACEVAR(callmsg.alpha->nonce, "callmsg.alpha->nonce");
 
-    CHECK(secp256k1_threshold_challenge_recieved(tctx, &respmsg, &aliceparam, &challengemsg) == 1);
+    TRACEVAR(callmsg.zeta->message, "callmsg.zeta->message");
+    TRACEVAR(callmsg.zeta->nonce, "callmsg.zeta->nonce");*/
 
-    CHECK(secp256k1_threshold_response_challenge_recieved(tctx, &termsg, &bobparam, &bobsecshare, &callmsg, &respmsg, msg32, alicepaillierpub, bobpaillierpub, secp256k1_paillier_nonce_function_default) == 1);
+    output = secp256k1_threshold_call_msg_serialize(&outputlen, &callmsg);
+    /*tracechar(output, outputlen);*/
+    CHECK(secp256k1_threshold_call_msg_parse(&callmsg, output, outputlen) == 1);
 
-    CHECK(secp256k1_threshold_terminate_recieved(tctx, &sig, &termsg, &aliceparam, alicepaillierkey, &alicepubkey, msg32) == 1);
+
+    /*TRACEVAR(callmsg.alpha->message, "callmsg.alpha->message");
+    TRACEVAR(callmsg.alpha->nonce, "callmsg.alpha->nonce");
+
+    TRACEVAR(callmsg.zeta->message, "callmsg.zeta->message");
+    TRACEVAR(callmsg.zeta->nonce, "callmsg.zeta->nonce");*/
+
+    CHECK(secp256k1_threshold_call_received(tctx, &challengemsg, &bobparam, &callmsg, &bobsecshare, msg32) == 1);
+
+    /*tracepub(tctx, challengemsg.r2);*/
+
+    output = secp256k1_threshold_challenge_msg_serialize(tctx, &outputlen, &challengemsg);
+    /*tracechar(output, outputlen);*/
+    CHECK(secp256k1_threshold_challenge_msg_parse(tctx, &challengemsg, output, outputlen) == 1);
+
+    /*tracepub(tctx, challengemsg.r2);*/
+
+    CHECK(secp256k1_threshold_challenge_received(tctx, &respmsg, &aliceparam, &challengemsg) == 1);
+
+    /*tracescal(aliceparam.k);
+    tracescal(aliceparam.z);
+    tracepub(tctx, aliceparam.r);*/
+
+    output = secp256k1_threshold_params_serialize(tctx, &outputlen, &aliceparam, SECP256K1_THRESHOLD_PARAMS_FULL);
+    /*tracechar(output, outputlen);*/
+    secp256k1_threshold_params_clear(&aliceparam);
+    CHECK(secp256k1_threshold_params_parse(tctx, &aliceparam, output, outputlen) == 1);
+
+    CHECK(secp256k1_threshold_response_challenge_received(tctx, &termsg, &bobparam, &bobsecshare, &callmsg, &respmsg, msg32, alicepaillierpub, bobpaillierpub, secp256k1_paillier_nonce_function_default) == 1);
+
+    CHECK(secp256k1_threshold_terminate_received(tctx, &sig, &termsg, &aliceparam, alicepaillierkey, &alicepubkey, msg32) == 1);
 
     secp256k1_ecdsa_signature_normalize(tctx, &normsig, &sig);
     CHECK(secp256k1_ecdsa_verify(tctx, &normsig, msg32, &alicepubkey) == 1);
