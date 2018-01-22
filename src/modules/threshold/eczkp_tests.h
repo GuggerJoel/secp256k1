@@ -18,7 +18,8 @@
 #endif /* TRACE */
 
 void run_eczkp_tests(void) {
-    int i = 0;
+    secp256k1_context *tctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
+
     secp256k1_eczkp_parameter *eczkp_param = secp256k1_eczkp_parameter_create();
     secp256k1_eczkp_pi *eczkp_pi = secp256k1_eczkp_pi_create();
     secp256k1_eczkp_pi2 *eczkp_pi2 = secp256k1_eczkp_pi2_create();
@@ -414,58 +415,57 @@ void run_eczkp_tests(void) {
         0x42, 0x5e, 0x81, 0xdc, 0xff, 0x0e, 0xa9, 0xba, 0xdc, 0x70, 0x94, 0xdf, 0x22, 0x2a
     };
 
-    if (secp256k1_eczkp_parameter_parse(eczkp_param, raw_eczkp_parameter, 399)) {
-        TRACEVAR(eczkp_param->modulus, "modulus");
-        TRACEVAR(eczkp_param->h1, "h1");
-        TRACEVAR(eczkp_param->h2, "h2");
-    }
+    CHECK(secp256k1_eczkp_parameter_parse(eczkp_param, raw_eczkp_parameter, 399) == 1);
+    
+    /*TRACEVAR(eczkp_param->modulus, "modulus");
+    TRACEVAR(eczkp_param->h1, "h1");
+    TRACEVAR(eczkp_param->h2, "h2");*/
 
-    /*041a7c0f81ffe2a7ebbd0870974eaaa52395fe2aa5d7069503a88c5874ea1b7dfe379cca0558e99f8cef183c2f3c76e319771b8f8392bbc4baee5eac5f9dddfe9d*/
-    if (secp256k1_eczkp_pi_parse(eczkp_pi, raw_eczkp_pi, 2603)) {
-        TRACEVAR(eczkp_pi->version, "version");
-        TRACEVAR(eczkp_pi->z1, "z1");
-        TRACEVAR(eczkp_pi->z2, "z2");
-        printf("\n%s", "y : ");
-        for (i = 0; i < 65; ++i)
-            printf("%02hhX", eczkp_pi->y[i]);
-        printf("\n");
-        TRACEVAR(eczkp_pi->e, "e");
-        TRACEVAR(eczkp_pi->s1, "s1");
-        TRACEVAR(eczkp_pi->s2, "s2");
-        TRACEVAR(eczkp_pi->s3, "s3");
-        TRACEVAR(eczkp_pi->t1, "t1");
-        TRACEVAR(eczkp_pi->t2, "t2");
-        TRACEVAR(eczkp_pi->t3, "t3");
-        TRACEVAR(eczkp_pi->t4, "t4");
-    }
+    CHECK(secp256k1_eczkp_pi_parse(tctx, eczkp_pi, raw_eczkp_pi, 2603) == 1);
+    
+    /*TRACEVAR(eczkp_pi->version, "version");
+    TRACEVAR(eczkp_pi->z1, "z1");
+    TRACEVAR(eczkp_pi->z2, "z2");
+    printf("\n%s", "y : ");
+    for (i = 0; i < 65; ++i)
+        printf("%02hhX", eczkp_pi->y[i]);
+    printf("\n");
+    TRACEVAR(eczkp_pi->e, "e");
+    TRACEVAR(eczkp_pi->s1, "s1");
+    TRACEVAR(eczkp_pi->s2, "s2");
+    TRACEVAR(eczkp_pi->s3, "s3");
+    TRACEVAR(eczkp_pi->t1, "t1");
+    TRACEVAR(eczkp_pi->t2, "t2");
+    TRACEVAR(eczkp_pi->t3, "t3");
+    TRACEVAR(eczkp_pi->t4, "t4");*/
 
-    /*04453f78a63e8f0b9b26b704f5b3d6c291a81f5f292b46e5c57f945e307567d2eda7ce541d0fa902296ff4e09f9cfbd14bc422dcd6759a5e07153fe6f9dd3682bc*/
-    if (secp256k1_eczkp_pi2_parse(eczkp_pi2, raw_eczkp_pi2, 3102)) {
-        TRACEVAR(eczkp_pi2->version, "version");
-        TRACEVAR(eczkp_pi2->z1, "z1");
-        TRACEVAR(eczkp_pi2->z2, "z2");
-        TRACEVAR(eczkp_pi2->z3, "z3");
-        printf("\n%s", "y : ");
-        for (i = 0; i < 65; ++i)
-            printf("%02hhX", eczkp_pi2->y[i]);
-        printf("\n");
-        TRACEVAR(eczkp_pi2->e, "e");
-        TRACEVAR(eczkp_pi2->s1, "s1");
-        TRACEVAR(eczkp_pi2->s2, "s2");
-        TRACEVAR(eczkp_pi2->s3, "s3");
-        TRACEVAR(eczkp_pi2->s4, "s4");
-        TRACEVAR(eczkp_pi2->t1, "t1");
-        TRACEVAR(eczkp_pi2->t2, "t2");
-        TRACEVAR(eczkp_pi2->t3, "t3");
-        TRACEVAR(eczkp_pi2->t4, "t4");
-        TRACEVAR(eczkp_pi2->t5, "t5");
-        TRACEVAR(eczkp_pi2->t6, "t6");
-        TRACEVAR(eczkp_pi2->t7, "t7");
-    }
+    CHECK(secp256k1_eczkp_pi2_parse(tctx, eczkp_pi2, raw_eczkp_pi2, 3102) == 1);
+
+    /*TRACEVAR(eczkp_pi2->version, "version");
+    TRACEVAR(eczkp_pi2->z1, "z1");
+    TRACEVAR(eczkp_pi2->z2, "z2");
+    TRACEVAR(eczkp_pi2->z3, "z3");
+    printf("\n%s", "y : ");
+    for (i = 0; i < 65; ++i)
+        printf("%02hhX", eczkp_pi2->y[i]);
+    printf("\n");
+    TRACEVAR(eczkp_pi2->e, "e");
+    TRACEVAR(eczkp_pi2->s1, "s1");
+    TRACEVAR(eczkp_pi2->s2, "s2");
+    TRACEVAR(eczkp_pi2->s3, "s3");
+    TRACEVAR(eczkp_pi2->s4, "s4");
+    TRACEVAR(eczkp_pi2->t1, "t1");
+    TRACEVAR(eczkp_pi2->t2, "t2");
+    TRACEVAR(eczkp_pi2->t3, "t3");
+    TRACEVAR(eczkp_pi2->t4, "t4");
+    TRACEVAR(eczkp_pi2->t5, "t5");
+    TRACEVAR(eczkp_pi2->t6, "t6");
+    TRACEVAR(eczkp_pi2->t7, "t7");*/
 
     secp256k1_eczkp_parameter_destroy(eczkp_param);
     secp256k1_eczkp_pi_destroy(eczkp_pi);
     secp256k1_eczkp_pi2_destroy(eczkp_pi2);
+    secp256k1_context_destroy(tctx);
 }
 
 #endif /* SECP256K1_MODULE_ECZKP_TESTS_H */

@@ -10,17 +10,114 @@
 #include "include/secp256k1_threshold.h"
 #include "src/modules/threshold/der_impl.h"
 
-
-secp256k1_threshold_call_msg* secp256k1_threshold_call_msg_create(void) {
-    secp256k1_threshold_call_msg *msg = malloc(sizeof(*msg));
-    msg->alpha = secp256k1_paillier_message_create();
-    msg->zeta = secp256k1_paillier_message_create();
-    return msg;
+void secp256k1_threshold_params_clear(secp256k1_threshold_signature_params *p) {
+    secp256k1_scalar_clear(&p->k);
+    secp256k1_scalar_clear(&p->z);
+    memset(&p->r.data, 0, 64);
 }
 
-/*secp256k1_threshold_challenge_msg *challenge_msg = secp256k1_threshold_challenge_msg_create(void) {
-    secp256k1_threshold_challenge_msg *msg = malloc(sizeof(*msg));
-    return msg;
+int secp256k1_threshold_params_parse(const secp256k1_context *ctx, secp256k1_threshold_signature_params *p, const unsigned char *input, size_t inputlen) {
+    unsigned char buf32[32], buf65[65];
+    unsigned long start = 0, offset = 0, lenght = 0;
+    int ret = 0;
+    int overflow = 0;
+    ret = secp256k1_der_parse_struct(input, inputlen, &start, &lenght, &offset);
+    if (ret) {
+        ret = secp256k1_der_parse_octet_string(input, inputlen, 32, &start, buf32, &lenght, &offset);
+        secp256k1_scalar_set_b32(&p->k, buf32, &overflow);
+        if (ret && !overflow) {
+            ret = secp256k1_der_parse_octet_string(input, inputlen, 32, &start, buf32, &lenght, &offset);
+            secp256k1_scalar_set_b32(&p->z, buf32, &overflow);
+            if (ret && !overflow) {
+                ret = secp256k1_der_parse_octet_string(input, inputlen, 65, &start, buf65, &lenght, &offset);
+                if (!secp256k1_ec_pubkey_parse(ctx, &p->r, buf65, lenght)) {
+                    /* Erase data in the pubkey */
+                    memset(&p->r.data, 0, 64);
+                }
+            }
+        }
+    }
+    memset(buf32, 0, 32);
+    memset(buf65, 0, 65);
+    return ret;
+}
+
+unsigned char* secp256k1_threshold_params_serialize(const secp256k1_context* ctx, size_t *outputlen, const secp256k1_threshold_signature_params *p, int flag) {
+    unsigned char *data = NULL, *kdata = NULL, *zdata = NULL, pub[65], *rdata = NULL, buf32[32];
+    size_t len, klen, zlen, rpub = 65, rlen;    
+    secp256k1_scalar_get_b32(buf32, &p->k);
+    kdata = secp256k1_der_serialize_octet_string(&klen, buf32, 32);
+    secp256k1_scalar_get_b32(buf32, &p->z);
+    zdata = secp256k1_der_serialize_octet_string(&zlen, buf32, 32);
+    if (flag == SECP256K1_THRESHOLD_PARAMS_FULL) {
+        secp256k1_ec_pubkey_serialize(ctx, pub, &rpub, &p->r, SECP256K1_EC_UNCOMPRESSED);
+        rdata = secp256k1_der_serialize_octet_string(&rlen, pub, rpub);
+    } else {
+        rdata = secp256k1_der_serialize_empty_octet_string(&rlen);
+    }
+    len = klen + zlen + rlen;
+    data = malloc(len * sizeof(unsigned char));
+    memcpy(data, kdata, klen);
+    memcpy(&data[klen], zdata, zlen);
+    memcpy(&data[klen + zlen], rdata, rlen);
+    memset(buf32, 0, 32);
+    return secp256k1_der_serialize_sequence(outputlen, data, len);
+}
+
+unsigned char* secp256k1_threshold_call_msg_serialize(size_t *outputlen, const secp256k1_threshold_call_msg *m) {
+    unsigned char *data = NULL, *alpha = NULL, *zeta = NULL;
+    size_t len, alen, zlen;
+    alpha = secp256k1_paillier_message_serialize(&alen, m->alpha);
+    zeta = secp256k1_paillier_message_serialize(&zlen, m->zeta);
+    len = alen + zlen;
+    data = malloc(len * sizeof(unsigned char));
+    memcpy(data, alpha, alen);
+    memcpy(&data[alen], zeta, zlen);
+    return secp256k1_der_serialize_sequence(outputlen, data, len);
+}
+
+int secp256k1_threshold_call_msg_parse(secp256k1_threshold_call_msg *m, const unsigned char *input, size_t inputlen) {
+    unsigned long start, offset, lenght, inlen;
+    int ret = 0;
+    start = offset = lenght = inlen = 0;
+    if (secp256k1_der_parse_struct(input, inputlen, &start, &lenght, &offset)) {
+        secp256k1_der_parse_struct_len(&input[start], &inlen);
+        ret = secp256k1_paillier_message_parse(m->alpha, &input[start], inlen);
+        if (ret) {
+            start += inlen;
+            secp256k1_der_parse_struct_len(&input[start], &inlen);
+            ret = secp256k1_paillier_message_parse(m->zeta, &input[start], inlen);
+        }
+    }
+    return ret;
+}
+
+unsigned char* secp256k1_threshold_challenge_msg_serialize(const secp256k1_context* ctx, size_t *outputlen, const secp256k1_threshold_challenge_msg *m) {
+    unsigned char *data = NULL, pub[65];
+    size_t len = 65, rlen = 0;
+    secp256k1_ec_pubkey_serialize(ctx, pub, &len, &m->r2, SECP256K1_EC_UNCOMPRESSED);
+    data = secp256k1_der_serialize_octet_string(&rlen, pub, len);
+    return secp256k1_der_serialize_sequence(outputlen, data, rlen);
+}
+
+int secp256k1_threshold_challenge_msg_parse(const secp256k1_context* ctx, secp256k1_threshold_challenge_msg *m, const unsigned char *input, size_t inputlen) {
+    unsigned char buf65[65];
+    unsigned long start, offset, lenght;
+    int ret = 0;
+    start = offset = lenght = 0;
+    if (secp256k1_der_parse_struct(input, inputlen, &start, &lenght, &offset)) {
+        ret = secp256k1_der_parse_octet_string(input, inputlen, 65, &start, buf65, &lenght, &offset);
+        if (!secp256k1_ec_pubkey_parse(ctx, &m->r2, buf65, lenght)) {
+            /* Erase data in the pubkey */
+            memset(&m->r2.data, 0, 64);
+        }
+    }
+    memset(buf65, 0, 65);
+    return ret;
+}
+
+/*int secp256k1_threshold_response_challenge_msg_parse(const secp256k1_context* ctx, secp256k1_threshold_response_challenge_msg *m, const unsigned char *input, size_t inputlen) {
+
 }*/
 
 int secp256k1_threshold_privkey_parse(const secp256k1_context *ctx, secp256k1_scalar *secshare, secp256k1_paillier_privkey *paillierkey, secp256k1_paillier_pubkey *pairedkey, secp256k1_pubkey *pubkey, const unsigned char *input, size_t inputlen) {
@@ -28,7 +125,7 @@ int secp256k1_threshold_privkey_parse(const secp256k1_context *ctx, secp256k1_sc
     unsigned long start, offset, lenght, inlen;
     mpz_t version;
     int overflow = 0;
-    start = offset = lenght = 0;
+    start = offset = lenght = inlen = 0;
     if (secp256k1_der_parse_struct(input, inputlen, &start, &lenght, &offset)) {
         mpz_init(version);
         /* Version MUST be set to 1 */
@@ -44,7 +141,7 @@ int secp256k1_threshold_privkey_parse(const secp256k1_context *ctx, secp256k1_sc
                 publicKey            OCTET STRING,
                 parameters       [0] ECParameters {{ NamedCurve }} OPTIONAL
             }*/ 
-            if (!secp256k1_der_parse_octet_string(input, inputlen, 32, &start, data, &offset)) {
+            if (!secp256k1_der_parse_octet_string(input, inputlen, 32, &start, data, &lenght, &offset)) {
                 return 0;
             }
             secp256k1_scalar_set_b32(secshare, data, &overflow);
@@ -59,8 +156,8 @@ int secp256k1_threshold_privkey_parse(const secp256k1_context *ctx, secp256k1_sc
                 return 0;
             }
             start += inlen;
-            if (!secp256k1_der_parse_octet_string(input, inputlen, 65, &start, data, &offset)
-                || !secp256k1_ec_pubkey_parse(ctx, pubkey, data, 65)) {
+            if (!secp256k1_der_parse_octet_string(input, inputlen, 65, &start, data, &lenght, &offset)
+                || !secp256k1_ec_pubkey_parse(ctx, pubkey, data, lenght)) {
                 return 0;
             }
 
@@ -112,7 +209,7 @@ int secp256k1_threshold_call_create(const secp256k1_context *ctx, secp256k1_thre
     return ret;
 }
 
-int secp256k1_threshold_call_recieved(const secp256k1_context *ctx, secp256k1_threshold_challenge_msg *challengemsg, secp256k1_threshold_signature_params *params, const secp256k1_threshold_call_msg *callmsg, const secp256k1_scalar *secshare, const unsigned char *msg32) {
+int secp256k1_threshold_call_received(const secp256k1_context *ctx, secp256k1_threshold_challenge_msg *challengemsg, secp256k1_threshold_signature_params *params, const secp256k1_threshold_call_msg *callmsg, const secp256k1_scalar *secshare, const unsigned char *msg32) {
     secp256k1_nonce_function noncefp;
     int ret = 0;
     int overflow = 0;
@@ -147,7 +244,7 @@ int secp256k1_threshold_call_recieved(const secp256k1_context *ctx, secp256k1_th
     return ret;
 }
 
-int secp256k1_threshold_challenge_recieved(const secp256k1_context *ctx, secp256k1_threshold_response_challenge_msg *respmsg, secp256k1_threshold_signature_params *params, const secp256k1_threshold_challenge_msg *challengemsg) {
+int secp256k1_threshold_challenge_received(const secp256k1_context *ctx, secp256k1_threshold_response_challenge_msg *respmsg, secp256k1_threshold_signature_params *params, const secp256k1_threshold_challenge_msg *challengemsg) {
     int ret = 0;
     unsigned char k32[32];
 
@@ -165,7 +262,7 @@ int secp256k1_threshold_challenge_recieved(const secp256k1_context *ctx, secp256
     return ret;
 }
 
-int secp256k1_threshold_response_challenge_recieved(const secp256k1_context *ctx, secp256k1_threshold_terminate_msg *termsg, secp256k1_threshold_signature_params *params, const secp256k1_scalar *secshare, const secp256k1_threshold_call_msg *callmsg, const secp256k1_threshold_response_challenge_msg *respmsg, const unsigned char *msg32, const secp256k1_paillier_pubkey *p1, const secp256k1_paillier_pubkey *p2, const secp256k1_paillier_nonce_function noncefp) {
+int secp256k1_threshold_response_challenge_received(const secp256k1_context *ctx, secp256k1_threshold_terminate_msg *termsg, secp256k1_threshold_signature_params *params, const secp256k1_scalar *secshare, const secp256k1_threshold_call_msg *callmsg, const secp256k1_threshold_response_challenge_msg *respmsg, const unsigned char *msg32, const secp256k1_paillier_pubkey *p1, const secp256k1_paillier_pubkey *p2, const secp256k1_paillier_nonce_function noncefp) {
     unsigned char b[32];
     unsigned char n32[32] = {
         0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 
@@ -231,7 +328,7 @@ int secp256k1_threshold_response_challenge_recieved(const secp256k1_context *ctx
     return ret;
 }
 
-int secp256k1_threshold_terminate_recieved(const secp256k1_context *ctx, secp256k1_ecdsa_signature* sig, const secp256k1_threshold_terminate_msg *termsg, const secp256k1_threshold_signature_params *params, const secp256k1_paillier_privkey *p, const secp256k1_pubkey *pub, const unsigned char *msg32) {
+int secp256k1_threshold_terminate_received(const secp256k1_context *ctx, secp256k1_ecdsa_signature* sig, const secp256k1_threshold_terminate_msg *termsg, const secp256k1_threshold_signature_params *params, const secp256k1_paillier_privkey *p, const secp256k1_pubkey *pub, const unsigned char *msg32) {
     unsigned char n32[32] = {
         0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 
         0xba, 0xae, 0xdc, 0xe6, 0xaf, 0x48, 0xa0, 0x3b, 0xbf, 0xd2, 0x5e, 0x8c, 0xd0, 0x36, 0x41, 0x41

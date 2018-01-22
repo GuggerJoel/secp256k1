@@ -98,7 +98,9 @@ int secp256k1_eczkp_parameter_parse(secp256k1_eczkp_parameter *eczkp, const unsi
     return 0;
 }
 
-int secp256k1_eczkp_pi_parse(secp256k1_eczkp_pi *eczkp_pi, const unsigned char *input, size_t inputlen) {
+int secp256k1_eczkp_pi_parse(const secp256k1_context *ctx, secp256k1_eczkp_pi *eczkp_pi, const unsigned char *input, size_t inputlen) {
+    unsigned char buf65[65];
+    int ret = 0;
     unsigned long start, offset, lenght;
     start = offset = lenght = 0;
    if (secp256k1_der_parse_struct(input, inputlen, &start, &lenght, &offset)) {
@@ -107,7 +109,7 @@ int secp256k1_eczkp_pi_parse(secp256k1_eczkp_pi *eczkp_pi, const unsigned char *
             && mpz_cmp_ui(eczkp_pi->version, 1) == 0) {
             if (secp256k1_der_parse_int(input, inputlen, &start, eczkp_pi->z1, &offset)
                 && secp256k1_der_parse_int(input, inputlen, &start, eczkp_pi->z2, &offset)
-                && secp256k1_der_parse_octet_string(input, inputlen, 65, &start, eczkp_pi->y, &offset)
+                && secp256k1_der_parse_octet_string(input, inputlen, 65, &start, buf65, &lenght, &offset)
                 && secp256k1_der_parse_int(input, inputlen, &start, eczkp_pi->e, &offset)
                 && secp256k1_der_parse_int(input, inputlen, &start, eczkp_pi->s1, &offset)
                 && secp256k1_der_parse_int(input, inputlen, &start, eczkp_pi->s2, &offset)
@@ -116,24 +118,31 @@ int secp256k1_eczkp_pi_parse(secp256k1_eczkp_pi *eczkp_pi, const unsigned char *
                 && secp256k1_der_parse_int(input, inputlen, &start, eczkp_pi->t2, &offset)
                 && secp256k1_der_parse_int(input, inputlen, &start, eczkp_pi->t3, &offset)
                 && secp256k1_der_parse_int(input, inputlen, &start, eczkp_pi->t4, &offset)) {
-                return 1;
+                ret = secp256k1_ec_pubkey_parse(ctx, &eczkp_pi->y, buf65, lenght);
+                if (!ret) {
+                    /* Erase data in the pubkey */
+                    memset(&eczkp_pi->y.data, 0, 64);
+                }
+                return ret;
             }
         }
     }
     return 0;
 }
 
-int secp256k1_eczkp_pi2_parse(secp256k1_eczkp_pi2 *eczkp_pi2, const unsigned char *input, size_t inputlen) {
+int secp256k1_eczkp_pi2_parse(const secp256k1_context *ctx, secp256k1_eczkp_pi2 *eczkp_pi2, const unsigned char *input, size_t inputlen) {
+    unsigned char buf65[65];
+    int ret = 0;
     unsigned long start, offset, lenght;
     start = offset = lenght = 0;
-   if (secp256k1_der_parse_struct(input, inputlen, &start, &lenght, &offset)) {
+    if (secp256k1_der_parse_struct(input, inputlen, &start, &lenght, &offset)) {
         /* Version MUST be set to 1 */
         if (secp256k1_der_parse_int(input, inputlen, &start, eczkp_pi2->version, &offset) 
             && mpz_cmp_ui(eczkp_pi2->version, 1) == 0) {
             if (secp256k1_der_parse_int(input, inputlen, &start, eczkp_pi2->z1, &offset)
                 && secp256k1_der_parse_int(input, inputlen, &start, eczkp_pi2->z2, &offset)
                 && secp256k1_der_parse_int(input, inputlen, &start, eczkp_pi2->z3, &offset)
-                && secp256k1_der_parse_octet_string(input, inputlen, 65, &start, eczkp_pi2->y, &offset)
+                && secp256k1_der_parse_octet_string(input, inputlen, 65, &start, buf65, &lenght, &offset)
                 && secp256k1_der_parse_int(input, inputlen, &start, eczkp_pi2->e, &offset)
                 && secp256k1_der_parse_int(input, inputlen, &start, eczkp_pi2->s1, &offset)
                 && secp256k1_der_parse_int(input, inputlen, &start, eczkp_pi2->s2, &offset)
@@ -146,7 +155,12 @@ int secp256k1_eczkp_pi2_parse(secp256k1_eczkp_pi2 *eczkp_pi2, const unsigned cha
                 && secp256k1_der_parse_int(input, inputlen, &start, eczkp_pi2->t5, &offset)
                 && secp256k1_der_parse_int(input, inputlen, &start, eczkp_pi2->t6, &offset)
                 && secp256k1_der_parse_int(input, inputlen, &start, eczkp_pi2->t7, &offset)) {
-                return 1;
+                ret = secp256k1_ec_pubkey_parse(ctx, &eczkp_pi2->y, buf65, lenght);
+                if (!ret) {
+                    /* Erase data in the pubkey */
+                    memset(&eczkp_pi2->y.data, 0, 64);
+                }
+                return ret;
             }
         }
     }

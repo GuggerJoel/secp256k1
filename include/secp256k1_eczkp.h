@@ -39,7 +39,7 @@ typedef struct {
     mpz_t version;
     mpz_t z1;
     mpz_t z2;
-    unsigned char y[65];
+    secp256k1_pubkey y;
     mpz_t e;
     mpz_t s1;
     mpz_t s2;
@@ -75,7 +75,7 @@ typedef struct {
     mpz_t z1;
     mpz_t z2;
     mpz_t z3;
-    unsigned char y[65];
+    secp256k1_pubkey y;
     mpz_t e;
     mpz_t s1;
     mpz_t s2;
@@ -91,9 +91,45 @@ typedef struct {
 } secp256k1_eczkp_pi2;
 
 secp256k1_eczkp_parameter* secp256k1_eczkp_parameter_create(void);
+
 void secp256k1_eczkp_parameter_destroy(secp256k1_eczkp_parameter *eczkp);
 
-int secp256k1_eczkp_pi_generate(
+secp256k1_eczkp_pi* secp256k1_eczkp_pi_create(void);
+
+void secp256k1_eczkp_pi_destroy(secp256k1_eczkp_pi *eczkp_pi);
+
+secp256k1_eczkp_pi2* secp256k1_eczkp_pi2_create(void);
+
+void secp256k1_eczkp_pi2_destroy(secp256k1_eczkp_pi2 *eczkp_pi2);
+
+/**
+ZKPParameter ::= SEQUENCE {
+    modulus            INTEGER,
+    h1                 INTEGER,
+    h2                 INTEGER
+}
+*/
+int secp256k1_eczkp_parameter_parse(
+    secp256k1_eczkp_parameter *eczkp,
+    const unsigned char *input,
+    size_t inputlen
+);
+
+int secp256k1_eczkp_pi_parse(
+    const secp256k1_context *ctx,
+    secp256k1_eczkp_pi *eczkp_pi,
+    const unsigned char *input,
+    size_t inputlen
+);
+
+int secp256k1_eczkp_pi2_parse(
+    const secp256k1_context *ctx,
+    secp256k1_eczkp_pi2 *eczkp_pi2,
+    const unsigned char *input,
+    size_t inputlen
+);
+
+/*int secp256k1_eczkp_pi_generate(
     secp256k1_eczkp_pi *eczkp_pi,
     secp256k1_eczkp_parameter *eczkp,
     secp256k1_paillier_encrypted_message *alpha,
@@ -104,31 +140,7 @@ int secp256k1_eczkp_pi_generate(
     unsigned char w1[65],
     unsigned char w2[65],
     secp256k1_paillier_pubkey *pubkey
-);
-
-secp256k1_eczkp_pi* secp256k1_eczkp_pi_create(void);
-void secp256k1_eczkp_pi_destroy(secp256k1_eczkp_pi *eczkp_pi);
-
-secp256k1_eczkp_pi2* secp256k1_eczkp_pi2_create(void);
-void secp256k1_eczkp_pi2_destroy(secp256k1_eczkp_pi2 *eczkp_pi2);
-
-int secp256k1_eczkp_parameter_parse(
-    secp256k1_eczkp_parameter *eczkp,
-    const unsigned char *input,
-    size_t inputlen
-);
-
-int secp256k1_eczkp_pi_parse(
-    secp256k1_eczkp_pi *eczkp_pi,
-    const unsigned char *input,
-    size_t inputlen
-);
-
-int secp256k1_eczkp_pi2_parse(
-    secp256k1_eczkp_pi2 *eczkp_pi2,
-    const unsigned char *input,
-    size_t inputlen
-);
+);*/
 
 #ifdef __cplusplus
 }
