@@ -42,6 +42,11 @@ typedef struct {
     mpz_t coefficient;
 } secp256k1_paillier_privkey;
 
+/**
+HEEncryptedMessage ::= SEQUENCE {
+    message           INTEGER
+}
+*/
 typedef struct {
     mpz_t message;
     mpz_t nonce;
@@ -49,16 +54,23 @@ typedef struct {
 
 typedef int (*secp256k1_paillier_nonce_function)(
     mpz_t nonce,
-    const mpz_t mod
+    const mpz_t max
 );
 
 secp256k1_paillier_privkey* secp256k1_paillier_privkey_create(void);
+
 secp256k1_paillier_encrypted_message* secp256k1_paillier_message_create(void);
+
 secp256k1_paillier_pubkey* secp256k1_paillier_pubkey_create(void);
+
 secp256k1_paillier_pubkey* secp256k1_paillier_pubkey_get(const secp256k1_paillier_privkey *privkey);
+
 void secp256k1_paillier_privkey_reset(secp256k1_paillier_privkey *privkey);
+
 void secp256k1_paillier_pubkey_reset(secp256k1_paillier_pubkey *pubkey);
+
 void secp256k1_paillier_privkey_destroy(secp256k1_paillier_privkey *privkey);
+
 void secp256k1_paillier_pubkey_destroy(secp256k1_paillier_pubkey *pubkey);
 
 /**

@@ -20,7 +20,7 @@
 #define TRACEVAR(x,msg)
 #endif /* TRACE */
 
-static int paillier_nonce_function(mpz_t nonce, const mpz_t mod) {
+static int paillier_nonce_function(mpz_t nonce, const mpz_t max) {
     char rnd[128];
     int counter, fd;
     mpz_t gcd, seed; gmp_randstate_t r_state;
@@ -42,8 +42,8 @@ static int paillier_nonce_function(mpz_t nonce, const mpz_t mod) {
     mpz_import(seed, 128, 1, 1, 1, 0, rnd);
     gmp_randseed(r_state, seed);
     do {
-        mpz_urandomm(nonce, r_state, mod);
-        mpz_gcd(gcd, nonce, mod);
+        mpz_urandomm(nonce, r_state, max);
+        mpz_gcd(gcd, nonce, max);
         if (counter > 10) {
             printf("%s\n", "Nonce failed");
             return 0;

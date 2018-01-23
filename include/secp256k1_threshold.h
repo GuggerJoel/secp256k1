@@ -70,6 +70,8 @@ typedef struct {
 
 void secp256k1_threshold_params_clear(secp256k1_threshold_signature_params *p);
 
+void secp256k1_threshold_init_call_msg(secp256k1_threshold_call_msg *m);
+
 int secp256k1_threshold_params_parse(
     const secp256k1_context* ctx,
     secp256k1_threshold_signature_params *p,
@@ -127,6 +129,8 @@ ThresholdECPrivateKey ::= SEQUENCE {
     privateShare         OCTET STRING,
     privateEnc           HEPrivateKey,
     pairedPublicEnc      HEPublicKey,
+    zkpParameters        ZKPParameter,
+    pairedPublicShare    OCTET STRING,
     publicKey            OCTET STRING,
     parameters       [0] ECParameters {{ NamedCurve }} OPTIONAL
 }*/ 
@@ -135,6 +139,8 @@ int secp256k1_threshold_privkey_parse(
     secp256k1_scalar *secshare,
     secp256k1_paillier_privkey *paillierkey,
     secp256k1_paillier_pubkey *pairedkey,
+    secp256k1_eczkp_parameter *zkp,
+    secp256k1_pubkey *pairedpubkey,
     secp256k1_pubkey *pubkey,
     const unsigned char *input,
     size_t inputlen
@@ -166,7 +172,12 @@ int secp256k1_threshold_challenge_received(
     const secp256k1_context *ctx,
     secp256k1_threshold_response_challenge_msg *respmsg,
     secp256k1_threshold_signature_params *params,
-    const secp256k1_threshold_challenge_msg *challengemsg
+    const secp256k1_scalar *secshare,
+    const secp256k1_threshold_challenge_msg *challengemsg,
+    const secp256k1_threshold_call_msg *callmsg,
+    const secp256k1_eczkp_parameter *zkp,
+    const secp256k1_paillier_pubkey *paillierkey,
+    const secp256k1_eczkp_rdn_function rdnfp
 );
 
 /* BOB 2 */
@@ -176,10 +187,13 @@ int secp256k1_threshold_response_challenge_received(
     secp256k1_threshold_signature_params *params,
     const secp256k1_scalar *secshare,
     const secp256k1_threshold_call_msg *callmsg,
+    const secp256k1_threshold_challenge_msg *challengemsg,
     const secp256k1_threshold_response_challenge_msg *respmsg,
     const unsigned char *msg32,
+    const secp256k1_eczkp_parameter *zkp,
     const secp256k1_paillier_pubkey *p1,
     const secp256k1_paillier_pubkey *p2,
+    const secp256k1_pubkey *pairedshare,
     const secp256k1_paillier_nonce_function noncefp
 );
 
