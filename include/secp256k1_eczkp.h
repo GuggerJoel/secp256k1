@@ -90,6 +90,15 @@ typedef struct {
     mpz_t t7;
 } secp256k1_eczkp_pi2;
 
+typedef int (*secp256k1_eczkp_rdn_function)(
+    mpz_t res,
+    const mpz_t max,
+    const int flag
+);
+
+#define SECP256K1_THRESHOLD_RND_INV 0x01
+#define SECP256K1_THRESHOLD_RND_STD 0x00
+
 secp256k1_eczkp_parameter* secp256k1_eczkp_parameter_create(void);
 
 void secp256k1_eczkp_parameter_destroy(secp256k1_eczkp_parameter *eczkp);
@@ -129,18 +138,32 @@ int secp256k1_eczkp_pi2_parse(
     size_t inputlen
 );
 
-/*int secp256k1_eczkp_pi_generate(
-    secp256k1_eczkp_pi *eczkp_pi,
-    secp256k1_eczkp_parameter *eczkp,
-    secp256k1_paillier_encrypted_message *alpha,
-    secp256k1_paillier_encrypted_message *zeta,
-    mpz_t x1,
-    mpz_t x2,
-    unsigned char c[65],
-    unsigned char w1[65],
-    unsigned char w2[65],
-    secp256k1_paillier_pubkey *pubkey
-);*/
+int secp256k1_eczkp_pi_generate(
+    const secp256k1_context *ctx,
+    secp256k1_eczkp_pi *pi,
+    const secp256k1_eczkp_parameter *zkp,
+    const secp256k1_paillier_encrypted_message *m1,
+    const secp256k1_paillier_encrypted_message *m2,
+    const secp256k1_scalar *sx1,
+    const secp256k1_scalar *sx2,
+    const secp256k1_pubkey *c,
+    const secp256k1_pubkey *w1,
+    const secp256k1_pubkey *w2,
+    const secp256k1_paillier_pubkey *pubkey,
+    const secp256k1_eczkp_rdn_function rdnfp
+);
+
+int secp256k1_eczkp_pi_verify(
+    const secp256k1_context *ctx,
+    secp256k1_eczkp_pi *pi,
+    const secp256k1_eczkp_parameter *zkp,
+    const secp256k1_paillier_encrypted_message *m1,
+    const secp256k1_paillier_encrypted_message *m2,
+    const secp256k1_pubkey *c,
+    const secp256k1_pubkey *w1,
+    const secp256k1_pubkey *w2,
+    const secp256k1_paillier_pubkey *pubkey
+);
 
 #ifdef __cplusplus
 }
