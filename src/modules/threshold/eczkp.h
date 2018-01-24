@@ -1,7 +1,7 @@
 #ifndef SECP256K1_ECZKP_H
 #define SECP256K1_ECZKP_H
 
-#include "secp256k1.h"
+#include "include/secp256k1.h"
 #include <gmp.h>
 
 #ifdef __cplusplus
@@ -131,11 +131,23 @@ int secp256k1_eczkp_pi_parse(
     size_t inputlen
 );
 
+unsigned char* secp256k1_eczkp_pi_serialize(
+    const secp256k1_context *ctx,
+    size_t *outlen,
+    const secp256k1_eczkp_pi *p
+);
+
 int secp256k1_eczkp_pi2_parse(
     const secp256k1_context *ctx,
     secp256k1_eczkp_pi2 *eczkp_pi2,
     const unsigned char *input,
     size_t inputlen
+);
+
+unsigned char* secp256k1_eczkp_pi2_serialize(
+    const secp256k1_context *ctx,
+    size_t *outlen,
+    const secp256k1_eczkp_pi2 *p
 );
 
 int secp256k1_eczkp_pi_generate(

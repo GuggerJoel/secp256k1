@@ -8,6 +8,9 @@
 #define SECP256K1_MODULE_ECZKP_TESTS_H
 
 void run_eczkp_tests(void) {
+    unsigned char* out;
+    size_t outlen;
+
     secp256k1_context *tctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
 
     secp256k1_eczkp_parameter *eczkp_param = secp256k1_eczkp_parameter_create();
@@ -406,52 +409,12 @@ void run_eczkp_tests(void) {
     };
 
     CHECK(secp256k1_eczkp_parameter_parse(eczkp_param, raw_eczkp_parameter, 399) == 1);
-    
-    /*TRACEVAR(eczkp_param->modulus, "modulus");
-    TRACEVAR(eczkp_param->h1, "h1");
-    TRACEVAR(eczkp_param->h2, "h2");*/
-
     CHECK(secp256k1_eczkp_pi_parse(tctx, eczkp_pi, raw_eczkp_pi, 2603) == 1);
-    
-    /*TRACEVAR(eczkp_pi->version, "version");
-    TRACEVAR(eczkp_pi->z1, "z1");
-    TRACEVAR(eczkp_pi->z2, "z2");
-    printf("\n%s", "y : ");
-    for (i = 0; i < 65; ++i)
-        printf("%02hhX", eczkp_pi->y[i]);
-    printf("\n");
-    TRACEVAR(eczkp_pi->e, "e");
-    TRACEVAR(eczkp_pi->s1, "s1");
-    TRACEVAR(eczkp_pi->s2, "s2");
-    TRACEVAR(eczkp_pi->s3, "s3");
-    TRACEVAR(eczkp_pi->t1, "t1");
-    TRACEVAR(eczkp_pi->t2, "t2");
-    TRACEVAR(eczkp_pi->t3, "t3");
-    TRACEVAR(eczkp_pi->t4, "t4");*/
-
+    out = secp256k1_eczkp_pi_serialize(tctx, &outlen, eczkp_pi);
+    CHECK(outlen == 2603);
     CHECK(secp256k1_eczkp_pi2_parse(tctx, eczkp_pi2, raw_eczkp_pi2, 3102) == 1);
-
-    /*TRACEVAR(eczkp_pi2->version, "version");
-    TRACEVAR(eczkp_pi2->z1, "z1");
-    TRACEVAR(eczkp_pi2->z2, "z2");
-    TRACEVAR(eczkp_pi2->z3, "z3");
-    printf("\n%s", "y : ");
-    for (i = 0; i < 65; ++i)
-        printf("%02hhX", eczkp_pi2->y[i]);
-    printf("\n");
-    TRACEVAR(eczkp_pi2->e, "e");
-    TRACEVAR(eczkp_pi2->s1, "s1");
-    TRACEVAR(eczkp_pi2->s2, "s2");
-    TRACEVAR(eczkp_pi2->s3, "s3");
-    TRACEVAR(eczkp_pi2->s4, "s4");
-    TRACEVAR(eczkp_pi2->t1, "t1");
-    TRACEVAR(eczkp_pi2->t2, "t2");
-    TRACEVAR(eczkp_pi2->t3, "t3");
-    TRACEVAR(eczkp_pi2->t4, "t4");
-    TRACEVAR(eczkp_pi2->t5, "t5");
-    TRACEVAR(eczkp_pi2->t6, "t6");
-    TRACEVAR(eczkp_pi2->t7, "t7");*/
-
+    out = secp256k1_eczkp_pi2_serialize(tctx, &outlen, eczkp_pi2);
+    CHECK(outlen == 3102);
     secp256k1_eczkp_parameter_destroy(eczkp_param);
     secp256k1_eczkp_pi_destroy(eczkp_pi);
     secp256k1_eczkp_pi2_destroy(eczkp_pi2);

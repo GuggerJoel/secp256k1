@@ -7,7 +7,7 @@
 #ifndef SECP256K1_MODULE_ECZKP_MAIN_H
 #define SECP256K1_MODULE_ECZKP_MAIN_H
 
-#include "include/secp256k1_eczkp.h"
+#include "src/modules/threshold/eczkp.h"
 #include "src/modules/threshold/der_impl.h"
 
 secp256k1_eczkp_parameter* secp256k1_eczkp_parameter_create(void) {
@@ -128,6 +128,141 @@ int secp256k1_eczkp_pi_parse(const secp256k1_context *ctx, secp256k1_eczkp_pi *e
         }
     }
     return 0;
+}
+
+unsigned char* secp256k1_eczkp_pi_serialize(const secp256k1_context *ctx, size_t *outlen, const secp256k1_eczkp_pi *p) {
+    unsigned char *data = NULL, *z1 = NULL, *z2 = NULL, pub[65], *y = NULL, *e = NULL, *s1 = NULL, *s2 = NULL, *s3 = NULL;
+    unsigned char *t1 = NULL, *t2 = NULL, *t3 = NULL, *t4 = NULL;
+    const unsigned char v[3] = { 0x02, 0x01, 0x01 };
+    size_t len = 0, vlen = 3, z1len = 0, z2len = 0, ylen = 65, elen = 0, s1len = 0, s2len = 0, s3len = 0, t1len = 0, t2len = 0, t3len = 0, t4len = 0, offset = 0;
+    z1 = secp256k1_der_serialize_int(&z1len, p->z1);
+    z2 = secp256k1_der_serialize_int(&z2len, p->z2);
+    secp256k1_ec_pubkey_serialize(ctx, pub, &ylen, &p->y, SECP256K1_EC_UNCOMPRESSED);
+    y = secp256k1_der_serialize_octet_string(&ylen, pub, ylen);
+    e = secp256k1_der_serialize_int(&elen, p->e);
+    s1 = secp256k1_der_serialize_int(&s1len, p->s1);
+    s2 = secp256k1_der_serialize_int(&s2len, p->s2);
+    s3 = secp256k1_der_serialize_int(&s3len, p->s3);
+    t1 = secp256k1_der_serialize_int(&t1len, p->t1);
+    t2 = secp256k1_der_serialize_int(&t2len, p->t2);
+    t3 = secp256k1_der_serialize_int(&t3len, p->t3);
+    t4 = secp256k1_der_serialize_int(&t4len, p->t4);
+    len = vlen + z1len + z2len + ylen + elen + s1len + s2len + s3len + t1len + t2len + t3len + t4len;
+    data = malloc(len * sizeof(unsigned char));
+    memcpy(&data[offset], v, vlen);
+    offset += vlen;
+    memcpy(&data[offset], z1, z1len);
+    offset += z1len;
+    memcpy(&data[offset], z2, z2len);
+    offset += z2len;
+    memcpy(&data[offset], y, ylen);
+    offset += ylen;
+    memcpy(&data[offset], e, elen);
+    offset += elen;
+    memcpy(&data[offset], s1, s1len);
+    offset += s1len;
+    memcpy(&data[offset], s2, s2len);
+    offset += s2len;
+    memcpy(&data[offset], s3, s3len);
+    offset += s3len;
+    memcpy(&data[offset], t1, t1len);
+    offset += t1len;
+    memcpy(&data[offset], t2, t2len);
+    offset += t2len;
+    memcpy(&data[offset], t3, t3len);
+    offset += t3len;
+    memcpy(&data[offset], t4, t4len);
+    offset += t4len;
+    free(z1);
+    free(z2);
+    free(y);
+    free(e);
+    free(s1);
+    free(s2);
+    free(s3);
+    free(t1);
+    free(t2);
+    free(t3);
+    free(t4);
+    return secp256k1_der_serialize_sequence(outlen, data, len);
+}
+
+unsigned char* secp256k1_eczkp_pi2_serialize(const secp256k1_context *ctx, size_t *outlen, const secp256k1_eczkp_pi2 *p) {
+    unsigned char *data = NULL, *z1 = NULL, *z2 = NULL, *z3 = NULL, pub[65], *y = NULL, *e = NULL, *s1 = NULL, *s2 = NULL, *s3 = NULL, *s4 = NULL;
+    unsigned char *t1 = NULL, *t2 = NULL, *t3 = NULL, *t4 = NULL, *t5 = NULL, *t6 = NULL, *t7 = NULL;
+    const unsigned char v[3] = { 0x02, 0x01, 0x01 };
+    size_t len = 0, vlen = 3, z1len = 0, z2len = 0, z3len = 0, ylen = 65, elen = 0, s1len = 0, s2len = 0, s3len = 0, s4len = 0;
+    size_t t1len = 0, t2len = 0, t3len = 0, t4len = 0, t5len = 0, t6len = 0, t7len = 0, offset = 0;
+    z1 = secp256k1_der_serialize_int(&z1len, p->z1);
+    z2 = secp256k1_der_serialize_int(&z2len, p->z2);
+    z3 = secp256k1_der_serialize_int(&z3len, p->z3);
+    secp256k1_ec_pubkey_serialize(ctx, pub, &ylen, &p->y, SECP256K1_EC_UNCOMPRESSED);
+    y = secp256k1_der_serialize_octet_string(&ylen, pub, ylen);
+    e = secp256k1_der_serialize_int(&elen, p->e);
+    s1 = secp256k1_der_serialize_int(&s1len, p->s1);
+    s2 = secp256k1_der_serialize_int(&s2len, p->s2);
+    s3 = secp256k1_der_serialize_int(&s3len, p->s3);
+    s4 = secp256k1_der_serialize_int(&s4len, p->s4);
+    t1 = secp256k1_der_serialize_int(&t1len, p->t1);
+    t2 = secp256k1_der_serialize_int(&t2len, p->t2);
+    t3 = secp256k1_der_serialize_int(&t3len, p->t3);
+    t4 = secp256k1_der_serialize_int(&t4len, p->t4);
+    t5 = secp256k1_der_serialize_int(&t5len, p->t5);
+    t6 = secp256k1_der_serialize_int(&t6len, p->t6);
+    t7 = secp256k1_der_serialize_int(&t7len, p->t7);
+    len = vlen + z1len + z2len + z3len + ylen + elen + s1len + s2len + s3len + s4len + t1len + t2len + t3len + t4len + t5len + t6len + t7len;
+    data = malloc(len * sizeof(unsigned char));
+    memcpy(&data[offset], v, vlen);
+    offset += vlen;
+    memcpy(&data[offset], z1, z1len);
+    offset += z1len;
+    memcpy(&data[offset], z2, z2len);
+    offset += z2len;
+    memcpy(&data[offset], z3, z3len);
+    offset += z3len;
+    memcpy(&data[offset], y, ylen);
+    offset += ylen;
+    memcpy(&data[offset], e, elen);
+    offset += elen;
+    memcpy(&data[offset], s1, s1len);
+    offset += s1len;
+    memcpy(&data[offset], s2, s2len);
+    offset += s2len;
+    memcpy(&data[offset], s3, s3len);
+    offset += s3len;
+    memcpy(&data[offset], s4, s4len);
+    offset += s4len;
+    memcpy(&data[offset], t1, t1len);
+    offset += t1len;
+    memcpy(&data[offset], t2, t2len);
+    offset += t2len;
+    memcpy(&data[offset], t3, t3len);
+    offset += t3len;
+    memcpy(&data[offset], t4, t4len);
+    offset += t4len;
+    memcpy(&data[offset], t5, t5len);
+    offset += t5len;
+    memcpy(&data[offset], t6, t6len);
+    offset += t6len;
+    memcpy(&data[offset], t7, t7len);
+    offset += t7len;
+    free(z1);
+    free(z2);
+    free(z3);
+    free(y);
+    free(e);
+    free(s1);
+    free(s2);
+    free(s3);
+    free(s4);
+    free(t1);
+    free(t2);
+    free(t3);
+    free(t4);
+    free(t5);
+    free(t6);
+    free(t7);
+    return secp256k1_der_serialize_sequence(outlen, data, len);
 }
 
 int secp256k1_eczkp_pi2_parse(const secp256k1_context *ctx, secp256k1_eczkp_pi2 *eczkp_pi2, const unsigned char *input, size_t inputlen) {
@@ -258,7 +393,7 @@ int secp256k1_eczkp_pi_generate(const secp256k1_context *ctx, secp256k1_eczkp_pi
     mpz_add(tmp1, x2, phi3);
     mpz_mod(tmp2, tmp1, n);
     res = mpz_export(NULL, &countp, 1, sizeof(unsigned char), 1, 0, tmp2);
-    VERIFY_CHECK(countp <= 32);    
+    VERIFY_CHECK(countp <= 32);
     VERIFY_CHECK(secp256k1_ec_pubkey_create(ctx, &pi->y, res) == 1);
     /* v1 */
     mpz_add(tmp1, delta, epsilon);

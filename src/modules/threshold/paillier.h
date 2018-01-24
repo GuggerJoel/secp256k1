@@ -1,7 +1,7 @@
 #ifndef SECP256K1_PAILLIER_H
 #define SECP256K1_PAILLIER_H
 
-#include "secp256k1.h"
+#include "include/secp256k1.h"
 #include <gmp.h>
 
 #ifdef __cplusplus
