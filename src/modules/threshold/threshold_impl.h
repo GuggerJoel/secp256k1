@@ -311,7 +311,7 @@ int secp256k1_threshold_response_challenge_received(const secp256k1_context *ctx
     secp256k1_pubkey y2;
     secp256k1_scalar privinv, msg, sigr;
     secp256k1_ge r;
-    mpz_t m1, m2, m3, m4, m5, c, n5, n, nc, message, z, rsig, inv;
+    mpz_t m1, m2, m3, m4, m5, c, n5, n, nc, m, z, rsig, inv;
     secp256k1_paillier_encrypted_message *enc = secp256k1_paillier_message_create();
     int ret = 0;
     int overflow = 0;
@@ -336,7 +336,7 @@ int secp256k1_threshold_response_challenge_received(const secp256k1_context *ctx
         pairedkey
     );
     if (ret) {
-        mpz_inits(m1, m2, m3, m4, m5, c, n5, n, nc, message, z, rsig, inv, NULL);
+        mpz_inits(m1, m2, m3, m4, m5, c, n5, n, nc, m, z, rsig, inv, NULL);
         secp256k1_scalar_inverse(&params->z, &params->k); /* z2 */
         secp256k1_scalar_mul(&privinv, &params->z, secshare); /* x2z2 */
         mpz_import(n, 32, 1, sizeof(n32[0]), 1, 0, n32);
@@ -351,15 +351,14 @@ int secp256k1_threshold_response_challenge_received(const secp256k1_context *ctx
             /* These two conditions should be checked before calling */
             VERIFY_CHECK(!secp256k1_scalar_is_zero(&sigr));
             VERIFY_CHECK(overflow == 0);
-
             mpz_import(rsig, 32, 1, sizeof(b[0]), 1, 0, b);
             secp256k1_scalar_get_b32(b, &params->z);
             mpz_import(z, 32, 1, sizeof(b[0]), 1, 0, b);
             secp256k1_scalar_get_b32(b, &privinv);
             mpz_import(inv, 32, 1, sizeof(b[0]), 1, 0, b);
             secp256k1_scalar_get_b32(b, &msg);
-            mpz_import(message, 32, 1, sizeof(msg32[0]), 1, 0, msg32);
-            mpz_mul(m1, message, z); /* m'z2 */
+            mpz_import(m, 32, 1, sizeof(msg32[0]), 1, 0, msg32);
+            mpz_mul(m1, m, z); /* m'z2 */
             mpz_mul(m2, rsig, inv); /* r'x2z2 */
             mpz_pow_ui(n5, n, 5);
             noncefp(c, n5);
@@ -381,11 +380,11 @@ int secp256k1_threshold_response_challenge_received(const secp256k1_context *ctx
                     callmsg->alpha,         /* m3 */
                     callmsg->zeta,          /* m4 */
                     enc,                    /* r */
-                    &params->z,             /* sx1 */
-                    &privinv,               /* sx2 */
+                    z,                      /* x1 */
+                    inv,                    /* x2 */
                     c,                      /* x3 */
-                    &msg,                   /* sx4 */
-                    &sigr,                  /* sx5 */
+                    m,                      /* x4 */
+                    rsig,                   /* x5 */
                     &challengemsg->r2,      /* c */
                     &y2,                    /* w2 */
                     pairedkey,              /* pairedkey */
@@ -394,7 +393,7 @@ int secp256k1_threshold_response_challenge_received(const secp256k1_context *ctx
                 ) == 1);
             }
         }
-        mpz_clears(m1, m2, m3, m4, m5, c, n5, n, nc, message, z, rsig, inv, NULL);
+        mpz_clears(m1, m2, m3, m4, m5, c, n5, n, nc, m, z, rsig, inv, NULL);
         secp256k1_scalar_clear(&privinv);
         secp256k1_scalar_clear(&msg);
         secp256k1_scalar_clear(&sigr);
@@ -424,7 +423,6 @@ int secp256k1_threshold_terminate_received(const secp256k1_context *ctx, secp256
     ARG_CHECK(p != NULL);
     ARG_CHECK(pub != NULL);
     ARG_CHECK(msg32 != NULL);
-
     p1 = secp256k1_paillier_pubkey_get(p);
     ret = secp256k1_eczkp_pi2_verify(
         ctx,                     /* ctx */
