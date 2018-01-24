@@ -10,16 +10,6 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#define TRACE
-
-#ifdef TRACE
-#define TRACEVAR(x,msg) {fprintf (stdout, "\n"msg" : "); \
-    mpz_out_str (stdout, 10, (x)); \
-    fprintf (stdout, "\n"); }
-#else
-#define TRACEVAR(x,msg)
-#endif /* TRACE */
-
 static int paillier_nonce_function(mpz_t nonce, const mpz_t max) {
     char rnd[128];
     int counter, fd;

@@ -7,16 +7,6 @@
 #ifndef SECP256K1_MODULE_ECZKP_TESTS_H
 #define SECP256K1_MODULE_ECZKP_TESTS_H
 
-#define TRACE
-
-#ifdef TRACE
-#define TRACEVAR(x,msg) {fprintf (stdout, "\n"msg" : "); \
-    mpz_out_str (stdout, 10, (x)); \
-    fprintf (stdout, "\n"); }
-#else
-#define TRACEVAR(x,msg)
-#endif /* TRACE */
-
 void run_eczkp_tests(void) {
     secp256k1_context *tctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
 
