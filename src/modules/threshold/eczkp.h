@@ -8,33 +8,12 @@
 extern "C" {
 #endif
 
-/**
-ZKPParameter ::= SEQUENCE {
-    modulus            INTEGER,
-    h1                 INTEGER,
-    h2                 INTEGER
-}*/
 typedef struct {
     mpz_t modulus;
     mpz_t h1;
     mpz_t h2;
 } secp256k1_eczkp_parameter;
 
-/**
-ECZKPPi ::= SEQUENCE {
-    version            INTEGER,
-    z1                 INTEGER,
-    z2                 INTEGER,
-    y                  OCTET STRING,
-    e                  INTEGER,
-    s1                 INTEGER,
-    s2                 INTEGER,
-    s3                 INTEGER,
-    t1                 INTEGER,
-    t2                 INTEGER,
-    t3                 INTEGER,
-    t4                 INTEGER
-}*/
 typedef struct {
     mpz_t version;
     mpz_t z1;
@@ -50,26 +29,6 @@ typedef struct {
     mpz_t t4;
 } secp256k1_eczkp_pi;
 
-/*
-ECZKPPiPrim ::= SEQUENCE {
-    version            INTEGER,
-    z1                 INTEGER,
-    z2                 INTEGER,
-    z3                 INTEGER,
-    y                  OCTET STRING,
-    e                  INTEGER,
-    s1                 INTEGER,
-    s2                 INTEGER,
-    s3                 INTEGER,
-    s4                 INTEGER,
-    t1                 INTEGER,
-    t2                 INTEGER,
-    t3                 INTEGER,
-    t4                 INTEGER,
-    t5                 INTEGER,
-    t6                 INTEGER,
-    t7                 INTEGER
-}*/
 typedef struct {
     mpz_t version;
     mpz_t z1;
@@ -124,6 +83,44 @@ int secp256k1_eczkp_parameter_parse(
     size_t inputlen
 );
 
+/**
+ECZKPPi ::= SEQUENCE {
+    version            INTEGER,
+    z1                 INTEGER,
+    z2                 INTEGER,
+    y                  OCTET STRING,
+    e                  INTEGER,
+    s1                 INTEGER,
+    s2                 INTEGER,
+    s3                 INTEGER,
+    t1                 INTEGER,
+    t2                 INTEGER,
+    t3                 INTEGER,
+    t4                 INTEGER
+}
+*/
+unsigned char* secp256k1_eczkp_pi_serialize(
+    const secp256k1_context *ctx,
+    size_t *outlen,
+    const secp256k1_eczkp_pi *p
+);
+
+/**
+ECZKPPi ::= SEQUENCE {
+    version            INTEGER,
+    z1                 INTEGER,
+    z2                 INTEGER,
+    y                  OCTET STRING,
+    e                  INTEGER,
+    s1                 INTEGER,
+    s2                 INTEGER,
+    s3                 INTEGER,
+    t1                 INTEGER,
+    t2                 INTEGER,
+    t3                 INTEGER,
+    t4                 INTEGER
+}
+*/
 int secp256k1_eczkp_pi_parse(
     const secp256k1_context *ctx,
     secp256k1_eczkp_pi *eczkp_pi,
@@ -131,23 +128,57 @@ int secp256k1_eczkp_pi_parse(
     size_t inputlen
 );
 
-unsigned char* secp256k1_eczkp_pi_serialize(
+/*
+ECZKPPiPrim ::= SEQUENCE {
+    version            INTEGER,
+    z1                 INTEGER,
+    z2                 INTEGER,
+    z3                 INTEGER,
+    y                  OCTET STRING,
+    e                  INTEGER,
+    s1                 INTEGER,
+    s2                 INTEGER,
+    s3                 INTEGER,
+    s4                 INTEGER,
+    t1                 INTEGER,
+    t2                 INTEGER,
+    t3                 INTEGER,
+    t4                 INTEGER,
+    t5                 INTEGER,
+    t6                 INTEGER,
+    t7                 INTEGER
+}*/
+unsigned char* secp256k1_eczkp_pi2_serialize(
     const secp256k1_context *ctx,
     size_t *outlen,
-    const secp256k1_eczkp_pi *p
+    const secp256k1_eczkp_pi2 *p
 );
 
+/*
+ECZKPPiPrim ::= SEQUENCE {
+    version            INTEGER,
+    z1                 INTEGER,
+    z2                 INTEGER,
+    z3                 INTEGER,
+    y                  OCTET STRING,
+    e                  INTEGER,
+    s1                 INTEGER,
+    s2                 INTEGER,
+    s3                 INTEGER,
+    s4                 INTEGER,
+    t1                 INTEGER,
+    t2                 INTEGER,
+    t3                 INTEGER,
+    t4                 INTEGER,
+    t5                 INTEGER,
+    t6                 INTEGER,
+    t7                 INTEGER
+}*/
 int secp256k1_eczkp_pi2_parse(
     const secp256k1_context *ctx,
     secp256k1_eczkp_pi2 *eczkp_pi2,
     const unsigned char *input,
     size_t inputlen
-);
-
-unsigned char* secp256k1_eczkp_pi2_serialize(
-    const secp256k1_context *ctx,
-    size_t *outlen,
-    const secp256k1_eczkp_pi2 *p
 );
 
 int secp256k1_eczkp_pi_generate(

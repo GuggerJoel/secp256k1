@@ -5020,7 +5020,7 @@ int main(int argc, char **argv) {
     run_paillier_tests();
     /* Zero-knowledge proofs tests */
     run_eczkp_tests();
-    /* Tests tests */
+    /* Threshold tests */
     run_threshold_tests();
 #endif
 

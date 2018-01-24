@@ -8,30 +8,12 @@
 extern "C" {
 #endif
 
-/**
-HEPublicKey ::= SEQUENCE {
-    version           INTEGER,
-    modulus           INTEGER,  -- p * q
-    generator         INTEGER   -- n + 1
-}
-*/
 typedef struct {
     mpz_t modulus;
     mpz_t generator;
     mpz_t bigModulus;
 } secp256k1_paillier_pubkey;
 
-/**
-HEPrivateKey ::= SEQUENCE {
-    version           INTEGER,
-    modulus           INTEGER,  -- p * q
-    prime1            INTEGER,  -- p
-    prime2            INTEGER,  -- q
-    generator         INTEGER,  -- n + 1
-    privateExponent   INTEGER,  -- (p - 1) * (q - 1)
-    coefficient       INTEGER   -- (inverse of privateExponent) mod (p * q)
-}
-*/
 typedef struct {
     mpz_t modulus;
     mpz_t prime1;
@@ -42,11 +24,6 @@ typedef struct {
     mpz_t coefficient;
 } secp256k1_paillier_privkey;
 
-/**
-HEEncryptedMessage ::= SEQUENCE {
-    message           INTEGER
-}
-*/
 typedef struct {
     mpz_t message;
     mpz_t nonce;
@@ -60,6 +37,8 @@ typedef int (*secp256k1_paillier_nonce_function)(
 secp256k1_paillier_privkey* secp256k1_paillier_privkey_create(void);
 
 secp256k1_paillier_encrypted_message* secp256k1_paillier_message_create(void);
+
+void secp256k1_paillier_message_destroy(secp256k1_paillier_encrypted_message *m);
 
 secp256k1_paillier_pubkey* secp256k1_paillier_pubkey_create(void);
 
@@ -104,12 +83,22 @@ int secp256k1_paillier_pubkey_parse(
     size_t inputlen
 );
 
+/**
+HEEncryptedMessage ::= SEQUENCE {
+    message           INTEGER
+}
+*/
 int secp256k1_paillier_message_parse(
     secp256k1_paillier_encrypted_message *message,
     const unsigned char *input,
     size_t inputlen
 );
 
+/**
+HEEncryptedMessage ::= SEQUENCE {
+    message           INTEGER
+}
+*/
 unsigned char* secp256k1_paillier_message_serialize(
     size_t *outputlen,
     const secp256k1_paillier_encrypted_message *message
@@ -124,9 +113,9 @@ int secp256k1_paillier_encrypt(
 );
 
 int secp256k1_paillier_encrypt_mpz(
-    secp256k1_paillier_encrypted_message *res, 
-    const mpz_t *m, 
-    const secp256k1_paillier_pubkey *pubkey, 
+    secp256k1_paillier_encrypted_message *res,
+    const mpz_t m,
+    const secp256k1_paillier_pubkey *pubkey,
     const secp256k1_paillier_nonce_function noncefp
 );
 
@@ -137,11 +126,25 @@ int secp256k1_paillier_encrypt_scalar(
     const secp256k1_paillier_nonce_function noncefp
 );
 
-void secp256k1_paillier_decrypt(mpz_t message, mpz_t cipher, const secp256k1_paillier_privkey *privkey);
+void secp256k1_paillier_decrypt(
+    mpz_t res,
+    const secp256k1_paillier_encrypted_message *c,
+    const secp256k1_paillier_privkey *pubkey
+);
 
-void secp256k1_paillier_mult(mpz_t res, mpz_t cipher, mpz_t scalar, const secp256k1_paillier_pubkey *pubkey);
+void secp256k1_paillier_mult(
+    secp256k1_paillier_encrypted_message *res,
+    const secp256k1_paillier_encrypted_message *c,
+    const mpz_t s,
+    const secp256k1_paillier_pubkey *pubkey
+);
 
-void secp256k1_paillier_add(mpz_t res, mpz_t op1, mpz_t op2, const secp256k1_paillier_pubkey *pubkey);
+void secp256k1_paillier_add(
+    secp256k1_paillier_encrypted_message *res,
+    const secp256k1_paillier_encrypted_message *op1,
+    const secp256k1_paillier_encrypted_message *op2,
+    const secp256k1_paillier_pubkey *pubkey
+);
 
 #ifdef __cplusplus
 }

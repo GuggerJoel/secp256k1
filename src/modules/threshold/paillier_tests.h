@@ -48,14 +48,16 @@ static int paillier_nonce_function(mpz_t nonce, const mpz_t max) {
 const secp256k1_paillier_nonce_function secp256k1_paillier_nonce_function_default = paillier_nonce_function;
 
 void run_paillier_tests(void) {
-    unsigned char *output;
-    size_t outputlen = 0;
-    mpz_t message, m2, scal;
+    size_t outlen = 0;
+    unsigned char *out;
+    mpz_t res, scal;
     secp256k1_paillier_pubkey *pubkey;
     secp256k1_paillier_pubkey *parsed_pubkey = secp256k1_paillier_pubkey_create();
     secp256k1_paillier_privkey *privkey = secp256k1_paillier_privkey_create();
-    secp256k1_paillier_encrypted_message *encrypted_message = secp256k1_paillier_message_create();
-    secp256k1_paillier_encrypted_message *recover_message = secp256k1_paillier_message_create();
+    secp256k1_paillier_encrypted_message *enc_message = secp256k1_paillier_message_create();
+    secp256k1_paillier_encrypted_message *mult_message = secp256k1_paillier_message_create();
+    secp256k1_paillier_encrypted_message *add_message = secp256k1_paillier_message_create();
+    secp256k1_paillier_encrypted_message *rec_message = secp256k1_paillier_message_create();
 
     const unsigned char data[1] = { 0x0A };
 
@@ -572,68 +574,42 @@ void run_paillier_tests(void) {
         0x83, 0xf0, 0x25, 0xa8, 0x8d, 0xe8, 0x2e, 0x18
     };
 
-    mpz_inits(message, m2, scal, NULL);
+    mpz_inits(res, scal, NULL);
     mpz_set_ui(scal, 10);
 
     CHECK(secp256k1_paillier_privkey_parse(privkey, NULL, raw_privkey, 2596) == 1);
 
-    /*TRACEVAR(privkey->modulus, "privkey modulus");
-    TRACEVAR(privkey->prime1, "privkey prime1");
-    TRACEVAR(privkey->prime2, "privkey prime2");
-    TRACEVAR(privkey->generator, "privkey generator");
-    TRACEVAR(privkey->privateExponent, "privkey privkey");
-    TRACEVAR(privkey->coefficient, "privkey inverse");*/
-
     pubkey = secp256k1_paillier_pubkey_get(privkey);
 
-    secp256k1_paillier_encrypt(encrypted_message, data, 1, pubkey, secp256k1_paillier_nonce_function_default);
+    secp256k1_paillier_encrypt(enc_message, data, 1, pubkey, secp256k1_paillier_nonce_function_default);
 
-    /*TRACEVAR(encrypted_message->message, "encrypted_message->message");
-    TRACEVAR(encrypted_message->nonce, "encrypted_message->nonce");*/
+    secp256k1_paillier_decrypt(res, enc_message, privkey);
+    CHECK(mpz_cmp_ui(res, 10) == 0);
 
-    secp256k1_paillier_decrypt(message, encrypted_message->message, privkey);
-    CHECK(mpz_cmp_ui(message, 10) == 0);
-
-    secp256k1_paillier_mult(m2, encrypted_message->message, scal, pubkey);
-    secp256k1_paillier_decrypt(message, m2, privkey);
-    CHECK(mpz_cmp_ui(message, 100) == 0);
+    secp256k1_paillier_mult(mult_message, enc_message, scal, pubkey);
+    secp256k1_paillier_decrypt(res, mult_message, privkey);
+    CHECK(mpz_cmp_ui(res, 100) == 0);
     
-    output = secp256k1_paillier_message_serialize(&outputlen, encrypted_message);
-    CHECK(secp256k1_paillier_message_parse(recover_message, output, outputlen) == 1);
+    out = secp256k1_paillier_message_serialize(&outlen, enc_message);
+    CHECK(secp256k1_paillier_message_parse(rec_message, out, outlen) == 1);
     
-    /*TRACEVAR(recover_message->message, "recover_message->message");
-    TRACEVAR(recover_message->nonce, "recover_message->nonce");*/
-
-    secp256k1_paillier_add(m2, encrypted_message->message, encrypted_message->message, pubkey);
-    secp256k1_paillier_decrypt(message, m2, privkey);
-    CHECK(mpz_cmp_ui(message, 20) == 0);
+    secp256k1_paillier_add(add_message, enc_message, enc_message, pubkey);
+    secp256k1_paillier_decrypt(res, add_message, privkey);
+    CHECK(mpz_cmp_ui(res, 20) == 0);
 
     CHECK(secp256k1_paillier_privkey_parse(privkey, NULL, raw_w_privkey, 5) == 0);
     CHECK(secp256k1_paillier_privkey_parse(privkey, NULL, raw_w1_privkey, 1555) == 0);
     CHECK(secp256k1_paillier_privkey_parse(privkey, NULL, raw_w2_privkey, 1555) == 0);
     
-    /*TRACEVAR(privkey->modulus, "privkey modulus");
-    TRACEVAR(privkey->prime1, "privkey prime1");
-    TRACEVAR(privkey->prime2, "privkey prime2");
-    TRACEVAR(privkey->generator, "privkey generator");
-    TRACEVAR(privkey->privateExponent, "privkey privkey");
-    TRACEVAR(privkey->coefficient, "privkey inverse");*/
-    
-    /*TRACEVAR(pubkey->modulus, "pubkey modulus");
-    TRACEVAR(pubkey->generator, "pubkey generator");*/
-
     CHECK(secp256k1_paillier_pubkey_parse(parsed_pubkey, raw_pubkey, 1041) == 1);
-
-    /*TRACEVAR(parsed_pubkey->modulus, "parsed_pubkey modulus");
-    TRACEVAR(parsed_pubkey->generator, "parsed_pubkey generator");*/
 
     secp256k1_paillier_privkey_destroy(privkey);
     secp256k1_paillier_pubkey_destroy(pubkey);
     secp256k1_paillier_pubkey_destroy(parsed_pubkey);
 
-    CHECK(secp256k1_paillier_message_parse(encrypted_message, raw_encrypted_message, 1032) == 1);
+    CHECK(secp256k1_paillier_message_parse(enc_message, raw_encrypted_message, 1032) == 1);
 
-    mpz_clears(message, m2, scal, NULL);
+    mpz_clears(res, scal, NULL);
 }
 
 #endif /* SECP256K1_MODULE_PAILLIER_TESTS_H */
