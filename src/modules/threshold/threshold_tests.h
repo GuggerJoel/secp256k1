@@ -651,6 +651,10 @@ void run_threshold_tests(void) {
     secp256k1_threshold_init_call_msg(&callmsg);
     secp256k1_threshold_init_call_msg(&parsedcallmsg);
 
+    secp256k1_threshold_init_response_challenge_msg(&respmsg);
+
+    secp256k1_threshold_init_terminate_msg(&termsg);
+
     secp256k1_threshold_params_clear(&aliceparam);
     secp256k1_threshold_params_clear(&bobparam);
 
@@ -688,29 +692,34 @@ void run_threshold_tests(void) {
     /* ALICE ROUND 2 */
     CHECK(secp256k1_threshold_challenge_received(tctx, &respmsg, &aliceparam, &alicesecshare, &challengemsg, &callmsg, alicezkp, alicepaillierpub, rdnfp) == 1);
 
-    /*TRACEVAR(respmsg.pi->version, "version");
-    TRACEVAR(respmsg.pi->z1, "z1");
-    TRACEVAR(respmsg.pi->z2, "z2");
-    printf("\n%s", "y : ");
-    tracepub(tctx, respmsg.pi->y);
-    TRACEVAR(respmsg.pi->e, "e");
-    TRACEVAR(respmsg.pi->s1, "s1");
-    TRACEVAR(respmsg.pi->s2, "s2");
-    TRACEVAR(respmsg.pi->s3, "s3");
-    TRACEVAR(respmsg.pi->t1, "t1");
-    TRACEVAR(respmsg.pi->t2, "t2");
-    TRACEVAR(respmsg.pi->t3, "t3");
-    TRACEVAR(respmsg.pi->t4, "t4");*/
-
     output = secp256k1_threshold_params_serialize(tctx, &outputlen, &aliceparam, SECP256K1_THRESHOLD_PARAMS_FULL);
     secp256k1_threshold_params_clear(&aliceparam);
     CHECK(secp256k1_threshold_params_parse(tctx, &aliceparam, output, outputlen) == 1);
 
     /* BOB ROUND 2 */
-    CHECK(secp256k1_threshold_response_challenge_received(tctx, &termsg, &bobparam, &bobsecshare, &parsedcallmsg, &challengemsg, &respmsg, msg32, bobzkp, alicepaillierpub, bobpaillierpub, &bobpaired, secp256k1_paillier_nonce_function_default) == 1);
+    CHECK(secp256k1_threshold_response_challenge_received(tctx, &termsg, &bobparam, &bobsecshare, &parsedcallmsg, &challengemsg, &respmsg, msg32, bobzkp, alicepaillierpub, bobpaillierpub, &bobpaired, secp256k1_paillier_nonce_function_default, rdnfp) == 1);
+
+    /*TRACEVAR(termsg.pi2->version, "version");
+    TRACEVAR(termsg.pi2->z1, "z1");
+    TRACEVAR(termsg.pi2->z2, "z2");
+    TRACEVAR(termsg.pi2->z3, "z3");
+    printf("\n%s", "y : ");
+    tracepub(tctx, termsg.pi2->y);
+    TRACEVAR(termsg.pi2->e, "e");
+    TRACEVAR(termsg.pi2->s1, "s1");
+    TRACEVAR(termsg.pi2->s2, "s2");
+    TRACEVAR(termsg.pi2->s3, "s3");
+    TRACEVAR(termsg.pi2->s4, "s4");
+    TRACEVAR(termsg.pi2->t1, "t1");
+    TRACEVAR(termsg.pi2->t2, "t2");
+    TRACEVAR(termsg.pi2->t3, "t3");
+    TRACEVAR(termsg.pi2->t4, "t4");
+    TRACEVAR(termsg.pi2->t5, "t5");
+    TRACEVAR(termsg.pi2->t6, "t6");
+    TRACEVAR(termsg.pi2->t7, "t7");*/
 
     /* ALICE ROUND 3 */
-    CHECK(secp256k1_threshold_terminate_received(tctx, &sig, &termsg, &aliceparam, alicepaillierkey, &alicepubkey, msg32) == 1);
+    CHECK(secp256k1_threshold_terminate_received(tctx, &sig, &parsedcallmsg, &challengemsg, &termsg, &aliceparam, alicezkp, alicepaillierkey, bobpaillierpub, &alicepubkey, &alicepaired, msg32) == 1);
 
     /* VERIFYING SIGNATURE */
     secp256k1_ecdsa_signature_normalize(tctx, &normsig, &sig);

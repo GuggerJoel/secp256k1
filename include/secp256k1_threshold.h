@@ -72,6 +72,10 @@ void secp256k1_threshold_params_clear(secp256k1_threshold_signature_params *p);
 
 void secp256k1_threshold_init_call_msg(secp256k1_threshold_call_msg *m);
 
+void secp256k1_threshold_init_response_challenge_msg(secp256k1_threshold_response_challenge_msg *m);
+
+void secp256k1_threshold_init_terminate_msg(secp256k1_threshold_terminate_msg *m);
+
 int secp256k1_threshold_params_parse(
     const secp256k1_context* ctx,
     secp256k1_threshold_signature_params *p,
@@ -191,20 +195,26 @@ int secp256k1_threshold_response_challenge_received(
     const secp256k1_threshold_response_challenge_msg *respmsg,
     const unsigned char *msg32,
     const secp256k1_eczkp_parameter *zkp,
-    const secp256k1_paillier_pubkey *p1,
+    const secp256k1_paillier_pubkey *pairedkey,
     const secp256k1_paillier_pubkey *p2,
     const secp256k1_pubkey *pairedshare,
-    const secp256k1_paillier_nonce_function noncefp
+    const secp256k1_paillier_nonce_function noncefp,
+    const secp256k1_eczkp_rdn_function rdnfp
 );
 
  /* ALICE 3 */
 int secp256k1_threshold_terminate_received(
     const secp256k1_context *ctx,
     secp256k1_ecdsa_signature* sig,
+    const secp256k1_threshold_call_msg *callmsg,
+    const secp256k1_threshold_challenge_msg *challengemsg,
     const secp256k1_threshold_terminate_msg *termsg,
     const secp256k1_threshold_signature_params *params,
+    const secp256k1_eczkp_parameter *zkp,
     const secp256k1_paillier_privkey *p,
+    const secp256k1_paillier_pubkey *pairedkey,
     const secp256k1_pubkey *pub,
+    const secp256k1_pubkey *pairedpub,
     const unsigned char *msg32
 );
 

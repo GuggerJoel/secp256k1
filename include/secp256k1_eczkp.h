@@ -165,6 +165,41 @@ int secp256k1_eczkp_pi_verify(
     const secp256k1_paillier_pubkey *pubkey
 );
 
+int secp256k1_eczkp_pi2_generate(
+    const secp256k1_context *ctx,
+    secp256k1_eczkp_pi2 *pi2,
+    const secp256k1_eczkp_parameter *zkp,
+    const secp256k1_paillier_encrypted_message *m1,
+    const secp256k1_paillier_encrypted_message *m2,
+    const secp256k1_paillier_encrypted_message *m3,
+    const secp256k1_paillier_encrypted_message *m4,
+    const secp256k1_paillier_encrypted_message *r,
+    const secp256k1_scalar *sx1,
+    const secp256k1_scalar *sx2,
+    const mpz_t x3,
+    const secp256k1_scalar *sx4,
+    const secp256k1_scalar *sx5,
+    const secp256k1_pubkey *c,
+    const secp256k1_pubkey *w2,
+    const secp256k1_paillier_pubkey *pairedkey,
+    const secp256k1_paillier_pubkey *pubkey,
+    const secp256k1_eczkp_rdn_function rdnfp
+);
+
+int secp256k1_eczkp_pi2_verify(
+    const secp256k1_context *ctx,
+    secp256k1_eczkp_pi2 *pi2,
+    const secp256k1_eczkp_parameter *zkp,
+    const secp256k1_paillier_encrypted_message *m1,
+    const secp256k1_paillier_encrypted_message *m2,
+    const secp256k1_paillier_encrypted_message *m3,
+    const secp256k1_paillier_encrypted_message *m4,
+    const secp256k1_pubkey *c,
+    const secp256k1_pubkey *w2,
+    const secp256k1_paillier_pubkey *pubkey,
+    const secp256k1_paillier_pubkey *pairedkey
+);
+
 #ifdef __cplusplus
 }
 #endif
