@@ -7,7 +7,7 @@
 #ifndef SECP256K1_MODULE_PAILLIER_MAIN_H
 #define SECP256K1_MODULE_PAILLIER_MAIN_H
 
-#include "include/secp256k1_paillier.h"
+#include "src/modules/threshold/paillier.h"
 #include "src/modules/threshold/der_impl.h"
 
 secp256k1_paillier_privkey* secp256k1_paillier_privkey_create(void) {
