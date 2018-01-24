@@ -8,57 +8,26 @@
 extern "C" {
 #endif
 
-/**
-ThresholdParameters ::= SEQUENCE {
-    k           OCTET STRING,
-    z           OCTET STRING,
-    r           OCTET STRING
-}
-*/
 typedef struct {
     secp256k1_scalar k;
     secp256k1_scalar z;
     secp256k1_pubkey r;
 } secp256k1_threshold_signature_params;
 
-/**
-ThresholdCallMsg ::= SEQUENCE {
-    alpha         HEEncryptedMessage,
-    zeta          HEEncryptedMessage
-}
-*/
 typedef struct {
     secp256k1_paillier_encrypted_message *alpha;
     secp256k1_paillier_encrypted_message *zeta;
 } secp256k1_threshold_call_msg;
 
-/**
-ThresholdChallengeMsg ::= SEQUENCE {
-    r2             OCTET STRING
-}
-*/
 typedef struct {
     secp256k1_pubkey r2;
 } secp256k1_threshold_challenge_msg;
 
-/**
-ThresholdResponseChallengeMsg ::= SEQUENCE {
-    r              OCTET STRING,
-    pi             ECZKPPi
-}
-*/
 typedef struct {
     secp256k1_pubkey r;
     secp256k1_eczkp_pi *pi;
 } secp256k1_threshold_response_challenge_msg;
 
-/**
-ThresholdTerminateMsg ::= SEQUENCE {
-    mu             HEEncryptedMessage,
-    mu2            HEEncryptedMessage,
-    pi2            ECZKPPiPrim
-}
-*/
 typedef struct {
     secp256k1_paillier_encrypted_message *mu;
     secp256k1_paillier_encrypted_message *mu2;
@@ -78,66 +47,128 @@ void secp256k1_threshold_init_response_challenge_msg(secp256k1_threshold_respons
 
 void secp256k1_threshold_init_terminate_msg(secp256k1_threshold_terminate_msg *m);
 
+/**
+ThresholdParameters ::= SEQUENCE {
+    k           OCTET STRING,
+    z           OCTET STRING,
+    r           OCTET STRING
+}
+*/
 int secp256k1_threshold_params_parse(
-    const secp256k1_context* ctx,
+    const secp256k1_context *ctx,
     secp256k1_threshold_signature_params *p,
     const unsigned char *input,
     size_t inputlen
 );
 
+/**
+ThresholdParameters ::= SEQUENCE {
+    k           OCTET STRING,
+    z           OCTET STRING,
+    r           OCTET STRING
+}
+*/
 unsigned char* secp256k1_threshold_params_serialize(
-    const secp256k1_context* ctx,
+    const secp256k1_context *ctx,
     size_t *outputlen,
     const secp256k1_threshold_signature_params *p,
     int flag
 );
 
+/**
+ThresholdCallMsg ::= SEQUENCE {
+    alpha         HEEncryptedMessage,
+    zeta          HEEncryptedMessage
+}
+*/
 int secp256k1_threshold_call_msg_parse(
     secp256k1_threshold_call_msg *m,
     const unsigned char *input,
     size_t inputlen
 );
 
+/**
+ThresholdCallMsg ::= SEQUENCE {
+    alpha         HEEncryptedMessage,
+    zeta          HEEncryptedMessage
+}
+*/
 unsigned char* secp256k1_threshold_call_msg_serialize(
     size_t *outputlen,
     const secp256k1_threshold_call_msg *m
 );
 
+/**
+ThresholdChallengeMsg ::= SEQUENCE {
+    r2             OCTET STRING
+}
+*/
 int secp256k1_threshold_challenge_msg_parse(
-    const secp256k1_context* ctx,
+    const secp256k1_context *ctx,
     secp256k1_threshold_challenge_msg *m,
     const unsigned char *input,
     size_t inputlen
 );
 
+/**
+ThresholdChallengeMsg ::= SEQUENCE {
+    r2             OCTET STRING
+}
+*/
 unsigned char* secp256k1_threshold_challenge_msg_serialize(
-    const secp256k1_context* ctx,
+    const secp256k1_context *ctx,
     size_t *outputlen,
     const secp256k1_threshold_challenge_msg *m
 );
 
+/**
+ThresholdResponseChallengeMsg ::= SEQUENCE {
+    r              OCTET STRING,
+    pi             ECZKPPi
+}
+*/
 int secp256k1_threshold_response_challenge_msg_parse(
-    const secp256k1_context* ctx,
+    const secp256k1_context *ctx,
     secp256k1_threshold_response_challenge_msg *m,
     const unsigned char *input,
     size_t inputlen
 );
 
+/**
+ThresholdResponseChallengeMsg ::= SEQUENCE {
+    r              OCTET STRING,
+    pi             ECZKPPi
+}
+*/
 unsigned char* secp256k1_threshold_response_challenge_msg_serialize(
-    const secp256k1_context* ctx,
+    const secp256k1_context *ctx,
     size_t *outputlen,
     const secp256k1_threshold_response_challenge_msg *m
 );
 
+/**
+ThresholdTerminateMsg ::= SEQUENCE {
+    mu             HEEncryptedMessage,
+    mu2            HEEncryptedMessage,
+    pi2            ECZKPPiPrim
+}
+*/
 int secp256k1_threshold_terminate_msg_parse(
-    const secp256k1_context* ctx,
+    const secp256k1_context *ctx,
     secp256k1_threshold_terminate_msg *m,
     const unsigned char *input,
     size_t inputlen
 );
 
+/**
+ThresholdTerminateMsg ::= SEQUENCE {
+    mu             HEEncryptedMessage,
+    mu2            HEEncryptedMessage,
+    pi2            ECZKPPiPrim
+}
+*/
 unsigned char* secp256k1_threshold_terminate_msg_serialize(
-    const secp256k1_context* ctx,
+    const secp256k1_context *ctx,
     size_t *outputlen,
     const secp256k1_threshold_terminate_msg *m
 );
@@ -173,6 +204,7 @@ int secp256k1_threshold_call_create(
     const secp256k1_scalar *secshare,
     const secp256k1_paillier_pubkey *paillierkey,
     const unsigned char *msg32,
+    const secp256k1_nonce_function noncefp,
     const secp256k1_paillier_nonce_function pnoncefp
 );
 
@@ -183,7 +215,8 @@ int secp256k1_threshold_call_received(
     secp256k1_threshold_signature_params *params,
     const secp256k1_threshold_call_msg *callmsg,
     const secp256k1_scalar *secshare,
-    const unsigned char *msg32
+    const unsigned char *msg32,
+    const secp256k1_nonce_function noncefp
 );
 
 /* ALICE 2 */

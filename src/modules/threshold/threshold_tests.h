@@ -7,59 +7,6 @@
 #ifndef SECP256K1_MODULE_THRESHOLD_TESTS_H
 #define SECP256K1_MODULE_THRESHOLD_TESTS_H
 
-#define TRACE
-
-#ifdef TRACE
-#define TRACEVAR(x,msg) {fprintf (stdout, "\n"msg" : "); \
-    mpz_out_str (stdout, 16, (x)); \
-    fprintf (stdout, "\n"); }
-#else
-#define TRACEVAR(x,msg)
-#endif /* TRACE */
-
-void tracescal(secp256k1_scalar s) {
-    unsigned char buf[32] = {0};
-    mpz_t num;
-    mpz_inits(num, NULL);
-    secp256k1_scalar_get_b32(buf, &s);
-    mpz_import(num, (size_t)32, 1, sizeof(buf[0]), 1, 0, buf);
-    mpz_out_str (stdout, 10, num);
-    fprintf(stdout, "\n");
-    mpz_clears(num, NULL);
-}
-
-void tracechar(unsigned char *d, size_t l) {
-    unsigned long i = 0;
-    for (; i < l; i++) {
-        printf("0x%02hhx, ", d[i]);
-        if ((i+1) % 16 == 0)
-            printf("\n");
-    }
-    printf("\n> %lu\n", l);
-}
-
-void tracepub(secp256k1_context *cctx, secp256k1_pubkey p) {
-    int i = 0;
-    size_t size = 65;
-    unsigned char b[65] = {0};
-    if (secp256k1_ec_pubkey_serialize(cctx, b, &size, &p, SECP256K1_EC_UNCOMPRESSED)) {
-        for (i = 0; i < 65; ++i)
-            printf("%02hhX", b[i]);
-        printf("\n");
-    }
-}
-
-void traceparam(secp256k1_context *cctx, secp256k1_threshold_signature_params p, int o) {
-    printf("%s : ", "k:");
-    tracescal(p.k);
-    printf("%s : ", "z:");
-    tracescal(p.z);
-    if (o) {
-        printf("%s : ", "r:");
-        tracepub(cctx, p.r);
-    }
-}
-
 static int eczkp_rdn_function(mpz_t res, const mpz_t max, const int flag) {
     int ret = 0;
     int cpt = 0;
@@ -664,7 +611,7 @@ void run_threshold_tests(void) {
     CHECK(secp256k1_threshold_privkey_parse(tctx, &b_secshare, b_pai_key, a_pai_pub, b_zkp, &b_paired, &b_pubkey, raw_threshold_bobprivkey, 4220) == 1);
 
     /* ALICE ROUND 1 */
-    CHECK(secp256k1_threshold_call_create(tctx, &callmsg, &a_tparam, &a_secshare, a_pai_pub, msg32, secp256k1_paillier_nonce_function_default) == 1);
+    CHECK(secp256k1_threshold_call_create(tctx, &callmsg, &a_tparam, &a_secshare, a_pai_pub, msg32, secp256k1_nonce_function_default, secp256k1_paillier_nonce_function_default) == 1);
 
     out = secp256k1_threshold_call_msg_serialize(&outlen, &callmsg);
     CHECK(secp256k1_threshold_call_msg_parse(&p_callmsg, out, outlen) == 1);
@@ -674,7 +621,7 @@ void run_threshold_tests(void) {
     CHECK(secp256k1_threshold_params_parse(tctx, &a_tparam, out, outlen) == 1);
     
     /* BOB ROUND 1 */
-    CHECK(secp256k1_threshold_call_received(tctx, &challmsg, &b_tparam, &p_callmsg, &b_secshare, msg32) == 1);
+    CHECK(secp256k1_threshold_call_received(tctx, &challmsg, &b_tparam, &p_callmsg, &b_secshare, msg32, secp256k1_nonce_function_default) == 1);
 
     out = secp256k1_threshold_challenge_msg_serialize(tctx, &outlen, &challmsg);
     CHECK(secp256k1_threshold_challenge_msg_parse(tctx, &p_challmsg, out, outlen) == 1);

@@ -61,7 +61,7 @@ int secp256k1_threshold_params_parse(const secp256k1_context *ctx, secp256k1_thr
     return ret;
 }
 
-unsigned char* secp256k1_threshold_params_serialize(const secp256k1_context* ctx, size_t *outputlen, const secp256k1_threshold_signature_params *p, int flag) {
+unsigned char* secp256k1_threshold_params_serialize(const secp256k1_context *ctx, size_t *outputlen, const secp256k1_threshold_signature_params *p, int flag) {
     unsigned char *data = NULL, *kdata = NULL, *zdata = NULL, pub[65], *rdata = NULL, buf32[32];
     size_t len, klen, zlen, rpub = 65, rlen;    
     secp256k1_scalar_get_b32(buf32, &p->k);
@@ -110,7 +110,7 @@ int secp256k1_threshold_call_msg_parse(secp256k1_threshold_call_msg *m, const un
     return ret;
 }
 
-unsigned char* secp256k1_threshold_challenge_msg_serialize(const secp256k1_context* ctx, size_t *outputlen, const secp256k1_threshold_challenge_msg *m) {
+unsigned char* secp256k1_threshold_challenge_msg_serialize(const secp256k1_context *ctx, size_t *outputlen, const secp256k1_threshold_challenge_msg *m) {
     unsigned char *data = NULL, pub[65];
     size_t len = 65, rlen = 0;
     secp256k1_ec_pubkey_serialize(ctx, pub, &len, &m->r2, SECP256K1_EC_UNCOMPRESSED);
@@ -118,7 +118,7 @@ unsigned char* secp256k1_threshold_challenge_msg_serialize(const secp256k1_conte
     return secp256k1_der_serialize_sequence(outputlen, data, rlen);
 }
 
-int secp256k1_threshold_challenge_msg_parse(const secp256k1_context* ctx, secp256k1_threshold_challenge_msg *m, const unsigned char *input, size_t inputlen) {
+int secp256k1_threshold_challenge_msg_parse(const secp256k1_context *ctx, secp256k1_threshold_challenge_msg *m, const unsigned char *input, size_t inputlen) {
     unsigned char buf65[65];
     unsigned long start, offset, lenght;
     int ret = 0;
@@ -134,7 +134,7 @@ int secp256k1_threshold_challenge_msg_parse(const secp256k1_context* ctx, secp25
     return ret;
 }
 
-int secp256k1_threshold_response_challenge_msg_parse(const secp256k1_context* ctx, secp256k1_threshold_response_challenge_msg *m, const unsigned char *input, size_t inputlen) {
+int secp256k1_threshold_response_challenge_msg_parse(const secp256k1_context *ctx, secp256k1_threshold_response_challenge_msg *m, const unsigned char *input, size_t inputlen) {
     unsigned char buf65[65];
     size_t start = 0, offset = 0, lenght = 0, inlen = 0;
     int ret = 0;
@@ -150,7 +150,7 @@ int secp256k1_threshold_response_challenge_msg_parse(const secp256k1_context* ct
     return 0;
 }
 
-unsigned char* secp256k1_threshold_response_challenge_msg_serialize(const secp256k1_context* ctx, size_t *outputlen, const secp256k1_threshold_response_challenge_msg *m) {
+unsigned char* secp256k1_threshold_response_challenge_msg_serialize(const secp256k1_context *ctx, size_t *outputlen, const secp256k1_threshold_response_challenge_msg *m) {
     unsigned char *data = NULL, *r = NULL, *pi = NULL, pub[65];
     size_t len = 0, rlen = 65, plen = 0;
     secp256k1_ec_pubkey_serialize(ctx, pub, &rlen, &m->r, SECP256K1_EC_UNCOMPRESSED);
@@ -165,7 +165,7 @@ unsigned char* secp256k1_threshold_response_challenge_msg_serialize(const secp25
     return secp256k1_der_serialize_sequence(outputlen, data, len);
 }
 
-int secp256k1_threshold_terminate_msg_parse(const secp256k1_context* ctx, secp256k1_threshold_terminate_msg *m, const unsigned char *input, size_t inputlen) {
+int secp256k1_threshold_terminate_msg_parse(const secp256k1_context *ctx, secp256k1_threshold_terminate_msg *m, const unsigned char *input, size_t inputlen) {
     size_t start = 0, offset = 0, lenght = 0, inlen = 0;
     if (secp256k1_der_parse_struct(input, inputlen, &start, &lenght, &offset)) {
         secp256k1_der_parse_struct_len(&input[start], &inlen);
@@ -182,7 +182,7 @@ int secp256k1_threshold_terminate_msg_parse(const secp256k1_context* ctx, secp25
     return 0;
 }
 
-unsigned char* secp256k1_threshold_terminate_msg_serialize(const secp256k1_context* ctx, size_t *outputlen, const secp256k1_threshold_terminate_msg *m) {
+unsigned char* secp256k1_threshold_terminate_msg_serialize(const secp256k1_context *ctx, size_t *outputlen, const secp256k1_threshold_terminate_msg *m) {
     unsigned char *data = NULL, *mu = NULL, *mu2 = NULL, *pi2 = NULL;
     size_t len = 0, mulen = 0, mu2len = 0, pi2len = 0;
     mu = secp256k1_paillier_message_serialize(&mulen, m->mu);
@@ -211,17 +211,6 @@ int secp256k1_threshold_privkey_parse(const secp256k1_context *ctx, secp256k1_sc
         if (secp256k1_der_parse_int(input, inputlen, &start, version, &offset) 
             && mpz_cmp_ui(version, 1) == 0) {
             mpz_clear(version);
-            /*
-            ThresholdECPrivateKey ::= SEQUENCE {
-                version              INTEGER,
-                privateShare         OCTET STRING,
-                privateEnc           HEPrivateKey,
-                pairedPublicEnc      HEPublicKey,
-                zkpParameters        ZKPParameter,
-                pairedPublicShare    OCTET STRING,
-                publicKey            OCTET STRING,
-                parameters       [0] ECParameters {{ NamedCurve }} OPTIONAL
-            }*/ 
             if (!secp256k1_der_parse_octet_string(input, inputlen, 32, &start, data, &lenght, &offset)) {
                 return 0;
             }
@@ -255,14 +244,13 @@ int secp256k1_threshold_privkey_parse(const secp256k1_context *ctx, secp256k1_sc
     return 0;
 }
 
-int secp256k1_threshold_call_create(const secp256k1_context *ctx, secp256k1_threshold_call_msg *callmsg, secp256k1_threshold_signature_params *params, const secp256k1_scalar *secshare, const secp256k1_paillier_pubkey *paillierkey, const unsigned char *msg32, const secp256k1_paillier_nonce_function pnoncefp) {
-    secp256k1_scalar privinv;
-    secp256k1_nonce_function noncefp;
+int secp256k1_threshold_call_create(const secp256k1_context *ctx, secp256k1_threshold_call_msg *callmsg, secp256k1_threshold_signature_params *params, const secp256k1_scalar *secshare, const secp256k1_paillier_pubkey *paillierkey, const unsigned char *msg32, const secp256k1_nonce_function noncefp, const secp256k1_paillier_nonce_function pnoncefp) {
     int ret = 0;
     int overflow = 0;
     unsigned char nonce32[32];
     unsigned char sec32[32];
     unsigned int count = 0;
+    secp256k1_scalar privinv;
 
     ARG_CHECK(ctx != NULL);
     ARG_CHECK(callmsg != NULL);
@@ -270,7 +258,6 @@ int secp256k1_threshold_call_create(const secp256k1_context *ctx, secp256k1_thre
     ARG_CHECK(secshare != NULL);
     ARG_CHECK(paillierkey != NULL);
     ARG_CHECK(msg32 != NULL);
-    noncefp = secp256k1_nonce_function_default;
     secp256k1_scalar_get_b32(sec32, secshare);
     while (1) {
         ret = noncefp(nonce32, msg32, sec32, NULL, NULL, count);
@@ -294,8 +281,7 @@ int secp256k1_threshold_call_create(const secp256k1_context *ctx, secp256k1_thre
     return ret;
 }
 
-int secp256k1_threshold_call_received(const secp256k1_context *ctx, secp256k1_threshold_challenge_msg *challengemsg, secp256k1_threshold_signature_params *params, const secp256k1_threshold_call_msg *callmsg, const secp256k1_scalar *secshare, const unsigned char *msg32) {
-    secp256k1_nonce_function noncefp;
+int secp256k1_threshold_call_received(const secp256k1_context *ctx, secp256k1_threshold_challenge_msg *challengemsg, secp256k1_threshold_signature_params *params, const secp256k1_threshold_call_msg *callmsg, const secp256k1_scalar *secshare, const unsigned char *msg32, const secp256k1_nonce_function noncefp) {
     int ret = 0;
     int overflow = 0;
     unsigned int count = 0;
@@ -308,7 +294,6 @@ int secp256k1_threshold_call_received(const secp256k1_context *ctx, secp256k1_th
     ARG_CHECK(callmsg != NULL);
     ARG_CHECK(secshare != NULL);
     ARG_CHECK(msg32 != NULL);
-    noncefp = secp256k1_nonce_function_default;
     secp256k1_scalar_get_b32(sec32, secshare);
     while (1) {
         ret = noncefp(k32, msg32, sec32, NULL, NULL, count);
@@ -372,13 +357,16 @@ int secp256k1_threshold_response_challenge_received(const secp256k1_context *ctx
         0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 
         0xba, 0xae, 0xdc, 0xe6, 0xaf, 0x48, 0xa0, 0x3b, 0xbf, 0xd2, 0x5e, 0x8c, 0xd0, 0x36, 0x41, 0x41
     };
+    int ret = 0;
+    int overflow = 0;
     secp256k1_pubkey y2;
     secp256k1_scalar privinv, msg, sigr;
     secp256k1_ge r;
-    mpz_t m1, m2, m3, m4, m5, c, n5, n, nc, m, z, rsig, inv;
+    mpz_t m1, m2, c, n5, n, nc, m, z, rsig, inv;
     secp256k1_paillier_encrypted_message *enc = secp256k1_paillier_message_create();
-    int ret = 0;
-    int overflow = 0;
+    secp256k1_paillier_encrypted_message *m3 = secp256k1_paillier_message_create();
+    secp256k1_paillier_encrypted_message *m4 = secp256k1_paillier_message_create();
+    secp256k1_paillier_encrypted_message *m5 = secp256k1_paillier_message_create();
 
     ARG_CHECK(ctx != NULL);
     ARG_CHECK(termsg != NULL);
@@ -400,11 +388,10 @@ int secp256k1_threshold_response_challenge_received(const secp256k1_context *ctx
         pairedkey
     );
     if (ret) {
-        mpz_inits(m1, m2, m3, m4, m5, c, n5, n, nc, m, z, rsig, inv, NULL);
+        mpz_inits(m1, m2, c, n5, n, nc, m, z, rsig, inv, NULL);
         secp256k1_scalar_inverse(&params->z, &params->k); /* z2 */
         secp256k1_scalar_mul(&privinv, &params->z, secshare); /* x2z2 */
         mpz_import(n, 32, 1, sizeof(n32[0]), 1, 0, n32);
-        
         secp256k1_scalar_set_b32(&msg, msg32, &overflow);
         if (!overflow && !secp256k1_scalar_is_zero(&msg)) {
             secp256k1_pubkey_load(ctx, &r, &respmsg->r);
@@ -427,14 +414,14 @@ int secp256k1_threshold_response_challenge_received(const secp256k1_context *ctx
             mpz_pow_ui(n5, n, 5);
             noncefp(c, n5);
             mpz_mul(nc, c, n); /* cn */
-            secp256k1_paillier_mult(m3, callmsg->alpha->message, m1, pairedkey);
-            secp256k1_paillier_mult(m4, callmsg->zeta->message, m2, pairedkey);
+            secp256k1_paillier_mult(m3, callmsg->alpha, m1, pairedkey);
+            secp256k1_paillier_mult(m4, callmsg->zeta, m2, pairedkey);
             secp256k1_paillier_add(m5, m3, m4, pairedkey);
-            ret = secp256k1_paillier_encrypt_mpz(enc, &nc, pairedkey, noncefp);
+            ret = secp256k1_paillier_encrypt_mpz(enc, nc, pairedkey, noncefp);
             secp256k1_scalar_get_b32(sec32, secshare);
             if (ret && secp256k1_ec_pubkey_create(ctx, &y2, sec32)) {
-                secp256k1_paillier_add(termsg->mu->message, m5, enc->message, pairedkey);
-                ret = secp256k1_paillier_encrypt_scalar(termsg->mu2, &params->z, p2, noncefp);
+                secp256k1_paillier_add(termsg->mu, m5, enc, pairedkey);
+                ret = secp256k1_paillier_encrypt_mpz(termsg->mu2, z, p2, noncefp);
                 VERIFY_CHECK(secp256k1_eczkp_pi2_generate(
                     ctx,                    /* ctx */
                     termsg->pi2,            /* pi2 */
@@ -457,11 +444,15 @@ int secp256k1_threshold_response_challenge_received(const secp256k1_context *ctx
                 ) == 1);
             }
         }
-        mpz_clears(m1, m2, m3, m4, m5, c, n5, n, nc, m, z, rsig, inv, NULL);
+        mpz_clears(m1, m2, c, n5, n, nc, m, z, rsig, inv, NULL);
         secp256k1_scalar_clear(&privinv);
         secp256k1_scalar_clear(&msg);
         secp256k1_scalar_clear(&sigr);
     }
+    secp256k1_paillier_message_destroy(enc);
+    secp256k1_paillier_message_destroy(m3);
+    secp256k1_paillier_message_destroy(m4);
+    secp256k1_paillier_message_destroy(m5);
     return ret;
 }
 
@@ -472,13 +463,13 @@ int secp256k1_threshold_terminate_received(const secp256k1_context *ctx, secp256
     };
     unsigned char b[32];
     void *ser;
-    size_t size;
-    secp256k1_scalar r, s, mes;
     int ret = 0;
     int overflow = 0;
-    secp256k1_ge sigr, pge;
+    size_t size;
     mpz_t m, n, sigs;
+    secp256k1_ge sigr, pge;
     secp256k1_paillier_pubkey *p1;
+    secp256k1_scalar r, s, mes;
 
     ARG_CHECK(ctx != NULL);
     ARG_CHECK(sig != NULL);
@@ -513,7 +504,7 @@ int secp256k1_threshold_terminate_received(const secp256k1_context *ctx, secp256
             VERIFY_CHECK(!secp256k1_scalar_is_zero(&r));
             VERIFY_CHECK(overflow == 0);
             mpz_inits(m, n, sigs, NULL);
-            secp256k1_paillier_decrypt(m, termsg->mu->message, p);
+            secp256k1_paillier_decrypt(m, termsg->mu, p);
             mpz_import(n, 32, 1, sizeof(n32[0]), 1, 0, n32);
             mpz_mod(sigs, m, n);
             ser = mpz_export(NULL, &size, 1, sizeof(unsigned char), 1, 0, sigs);
@@ -531,6 +522,7 @@ int secp256k1_threshold_terminate_received(const secp256k1_context *ctx, secp256
         secp256k1_scalar_clear(&s);
         secp256k1_scalar_clear(&mes);
     }
+    secp256k1_paillier_pubkey_destroy(p1);
     return ret;
 }
 
