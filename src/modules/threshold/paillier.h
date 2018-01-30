@@ -1,3 +1,9 @@
+/**********************************************************************
+ * Copyright (c) 2017 Joel Gugger                                     *
+ * Distributed under the MIT software license, see the accompanying   *
+ * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
+ **********************************************************************/
+
 #ifndef SECP256K1_PAILLIER_H
 #define SECP256K1_PAILLIER_H
 
@@ -58,7 +64,7 @@ HEPrivateKey ::= SEQUENCE {
     modulus           INTEGER,  -- p * q
     prime1            INTEGER,  -- p
     prime2            INTEGER,  -- q
-    generator         INTEGER,  -- n + 1
+    generator         INTEGER,
     privateExponent   INTEGER,  -- (p - 1) * (q - 1)
     coefficient       INTEGER   -- (inverse of privateExponent) mod (p * q)
 }
@@ -74,7 +80,7 @@ int secp256k1_paillier_privkey_parse(
 HEPublicKey ::= SEQUENCE {
     version           INTEGER,
     modulus           INTEGER,  -- p * q
-    generator         INTEGER   -- n + 1
+    generator         INTEGER
 }
 */
 int secp256k1_paillier_pubkey_parse(
@@ -129,7 +135,7 @@ int secp256k1_paillier_encrypt_scalar(
 void secp256k1_paillier_decrypt(
     mpz_t res,
     const secp256k1_paillier_encrypted_message *c,
-    const secp256k1_paillier_privkey *pubkey
+    const secp256k1_paillier_privkey *privkey
 );
 
 void secp256k1_paillier_mult(

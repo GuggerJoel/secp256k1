@@ -83,7 +83,7 @@ unsigned char* secp256k1_der_serialize_len(size_t *datalen, size_t lenght) {
     if (lenght >= 0x80) {
         mpz_init_set_ui(len, lenght);
         serialize = mpz_export(NULL, &longsize, 1, sizeof(unsigned char), 1, 0, len);
-
+        mpz_clear(len);
         *datalen = longsize + 1;
     } else {
         *datalen = 1;

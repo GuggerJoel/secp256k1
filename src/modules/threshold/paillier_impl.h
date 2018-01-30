@@ -195,14 +195,14 @@ int secp256k1_paillier_encrypt_mpz(secp256k1_paillier_encrypted_message *res, co
     return ret;
 }
 
-void secp256k1_paillier_decrypt(mpz_t res, const secp256k1_paillier_encrypted_message *c, const secp256k1_paillier_privkey *pubkey) {
+void secp256k1_paillier_decrypt(mpz_t res, const secp256k1_paillier_encrypted_message *c, const secp256k1_paillier_privkey *privkey) {
     mpz_t l1, l2; 
     mpz_inits(l1, l2, NULL);
-    mpz_powm(l1, c->message, pubkey->privateExponent, pubkey->bigModulus);
+    mpz_powm(l1, c->message, privkey->privateExponent, privkey->bigModulus);
     mpz_sub_ui(l2, l1, 1);
-    mpz_cdiv_q(l1, l2, pubkey->modulus);
-    mpz_mul(l2, l1, pubkey->coefficient);
-    mpz_mod(res, l2, pubkey->modulus);
+    mpz_cdiv_q(l1, l2, privkey->modulus);
+    mpz_mul(l2, l1, privkey->coefficient);
+    mpz_mod(res, l2, privkey->modulus);
     mpz_clears(l1, l2, NULL);
 }
 
