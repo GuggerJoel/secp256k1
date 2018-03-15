@@ -8,3 +8,9 @@ noinst_HEADERS += src/modules/threshold/eczkp_impl.h
 noinst_HEADERS += src/modules/threshold/eczkp_tests.h
 noinst_HEADERS += src/modules/threshold/threshold_impl.h
 noinst_HEADERS += src/modules/threshold/threshold_tests.h
+if USE_BENCHMARK
+noinst_PROGRAMS += bench_paillier
+bench_paillier_SOURCES = src/bench_paillier.c
+bench_paillier_LDADD = $(SECP_LIBS) $(COMMON_LIB)
+bench_paillier_CPPFLAGS = -DSECP256K1_BUILD $(SECP_INCLUDES)
+endif

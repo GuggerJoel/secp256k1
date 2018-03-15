@@ -63,7 +63,7 @@ int secp256k1_threshold_params_parse(const secp256k1_context *ctx, secp256k1_thr
 
 unsigned char* secp256k1_threshold_params_serialize(const secp256k1_context *ctx, size_t *outputlen, const secp256k1_threshold_signature_params *p, int flag) {
     unsigned char *data = NULL, *kdata = NULL, *zdata = NULL, pub[65], *rdata = NULL, buf32[32];
-    size_t len, klen, zlen, rpub = 65, rlen;    
+    size_t len, klen, zlen, rpub = 65, rlen;
     secp256k1_scalar_get_b32(buf32, &p->k);
     kdata = secp256k1_der_serialize_octet_string(&klen, buf32, 32);
     secp256k1_scalar_get_b32(buf32, &p->z);
@@ -208,7 +208,7 @@ int secp256k1_threshold_privkey_parse(const secp256k1_context *ctx, secp256k1_sc
     if (secp256k1_der_parse_struct(input, inputlen, &start, &lenght, &offset)) {
         mpz_init(version);
         /* Version MUST be set to 1 */
-        if (secp256k1_der_parse_int(input, inputlen, &start, version, &offset) 
+        if (secp256k1_der_parse_int(input, inputlen, &start, version, &offset)
             && mpz_cmp_ui(version, 1) == 0) {
             mpz_clear(version);
             if (!secp256k1_der_parse_octet_string(input, inputlen, 32, &start, data, &lenght, &offset)) {
@@ -268,7 +268,7 @@ int secp256k1_threshold_call_create(const secp256k1_context *ctx, secp256k1_thre
         if (!overflow && !secp256k1_scalar_is_zero(&params->k)) {
             secp256k1_scalar_inverse(&params->z, &params->k); /* z1 */
             secp256k1_scalar_mul(&privinv, &params->z, secshare); /* x1z1 */
-            if (secp256k1_paillier_encrypt_scalar(callmsg->alpha, &params->z, paillierkey, pnoncefp) 
+            if (secp256k1_paillier_encrypt_scalar(callmsg->alpha, &params->z, paillierkey, pnoncefp)
                 && secp256k1_paillier_encrypt_scalar(callmsg->zeta, &privinv, paillierkey, pnoncefp)) {
                 break;
             }
@@ -329,7 +329,7 @@ int secp256k1_threshold_challenge_received(const secp256k1_context *ctx, secp256
     ret = secp256k1_ec_pubkey_tweak_mul(ctx, &respmsg->r, k32);
     secp256k1_scalar_get_b32(k32, secshare);
     if (ret && secp256k1_ec_pubkey_create(ctx, &y1, k32)) {
-        memcpy(&params->r, &respmsg->r, sizeof(secp256k1_pubkey));        
+        memcpy(&params->r, &respmsg->r, sizeof(secp256k1_pubkey));
         secp256k1_scalar_mul(&privinv, &params->z, secshare);
         VERIFY_CHECK(secp256k1_eczkp_pi_generate(
             ctx,
@@ -354,7 +354,7 @@ int secp256k1_threshold_challenge_received(const secp256k1_context *ctx, secp256
 int secp256k1_threshold_response_challenge_received(const secp256k1_context *ctx, secp256k1_threshold_terminate_msg *termsg, secp256k1_threshold_signature_params *params, const secp256k1_scalar *secshare, const secp256k1_threshold_call_msg *callmsg, const secp256k1_threshold_challenge_msg *challengemsg, const secp256k1_threshold_response_challenge_msg *respmsg, const unsigned char *msg32, const secp256k1_eczkp_parameter *zkp, const secp256k1_paillier_pubkey *pairedkey, const secp256k1_paillier_pubkey *p2, const secp256k1_pubkey *pairedshare, const secp256k1_paillier_nonce_function noncefp, const secp256k1_eczkp_rdn_function rdnfp) {
     unsigned char b[32];
     unsigned char sec32[32], n32[32] = {
-        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 
+        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe,
         0xba, 0xae, 0xdc, 0xe6, 0xaf, 0x48, 0xa0, 0x3b, 0xbf, 0xd2, 0x5e, 0x8c, 0xd0, 0x36, 0x41, 0x41
     };
     int ret = 0;
@@ -458,7 +458,7 @@ int secp256k1_threshold_response_challenge_received(const secp256k1_context *ctx
 
 int secp256k1_threshold_terminate_received(const secp256k1_context *ctx, secp256k1_ecdsa_signature* sig, const secp256k1_threshold_call_msg *callmsg, const secp256k1_threshold_challenge_msg *challengemsg, const secp256k1_threshold_terminate_msg *termsg, const secp256k1_threshold_signature_params *params, const secp256k1_eczkp_parameter *zkp, const secp256k1_paillier_privkey *p, const secp256k1_paillier_pubkey *pairedkey, const secp256k1_pubkey *pub, const secp256k1_pubkey *pairedpub, const unsigned char *msg32) {
     unsigned char n32[32] = {
-        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 
+        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe,
         0xba, 0xae, 0xdc, 0xe6, 0xaf, 0x48, 0xa0, 0x3b, 0xbf, 0xd2, 0x5e, 0x8c, 0xd0, 0x36, 0x41, 0x41
     };
     unsigned char b[32];
@@ -509,7 +509,7 @@ int secp256k1_threshold_terminate_received(const secp256k1_context *ctx, secp256
             mpz_mod(sigs, m, n);
             ser = mpz_export(NULL, &size, 1, sizeof(unsigned char), 1, 0, sigs);
             secp256k1_scalar_set_b32(&s, ser, &overflow);
-            if (!overflow 
+            if (!overflow
                 && !secp256k1_scalar_is_zero(&s)
                 && secp256k1_ecdsa_sig_verify(&ctx->ecmult_ctx, &r, &s, &pge, &mes)) {
                 secp256k1_ecdsa_signature_save(sig, &r, &s);
