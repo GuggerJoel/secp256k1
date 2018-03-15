@@ -171,9 +171,28 @@ int secp256k1_paillier_encrypt_scalar(secp256k1_paillier_encrypted_message *res,
     return secp256k1_paillier_encrypt(res, data, (size_t)32, pubkey, noncefp);
 }
 
+static void secp256k1_paillier_encrypt_mpz_r(secp256k1_paillier_encrypted_message *res, const mpz_t m, const secp256k1_paillier_pubkey *pubkey, const mpz_t r) {
+    mpz_t l1, l2, l3;
+    mpz_set(res->nonce, r);
+    mpz_inits(l1, l2, l3, NULL);
+    mpz_powm(l1, pubkey->generator, m, pubkey->bigModulus);
+    mpz_powm(l2, res->nonce, pubkey->modulus, pubkey->bigModulus);
+    mpz_mul(l3, l1, l2);
+    mpz_mod(res->message, l3, pubkey->bigModulus);
+    mpz_clears(l1, l2, l3, NULL);
+}
+
+void secp256k1_paillier_encrypt_r(secp256k1_paillier_encrypted_message *res, const unsigned char *data, const size_t lenght, const secp256k1_paillier_pubkey *pubkey, const mpz_t r) {
+    mpz_t m;
+    mpz_init(m);
+    mpz_import(m, lenght, 1, sizeof(data[0]), 1, 0, data);
+    secp256k1_paillier_encrypt_mpz_r(res, m, pubkey, r);
+    mpz_clear(m);
+}
+
 int secp256k1_paillier_encrypt(secp256k1_paillier_encrypted_message *res, const unsigned char *data, const size_t lenght, const secp256k1_paillier_pubkey *pubkey, const secp256k1_paillier_nonce_function noncefp) {
     mpz_t m;
-    int ret = 0;
+    int ret;
     mpz_init(m);
     mpz_import(m, lenght, 1, sizeof(data[0]), 1, 0, data);
     ret = secp256k1_paillier_encrypt_mpz(res, m, pubkey, noncefp);
@@ -182,16 +201,14 @@ int secp256k1_paillier_encrypt(secp256k1_paillier_encrypted_message *res, const 
 }
 
 int secp256k1_paillier_encrypt_mpz(secp256k1_paillier_encrypted_message *res, const mpz_t m, const secp256k1_paillier_pubkey *pubkey, const secp256k1_paillier_nonce_function noncefp) {
-    mpz_t l1, l2, l3;
-    int ret = noncefp(res->nonce, pubkey->modulus);
+    int ret;
+    mpz_t nonce;
+    mpz_init(nonce);
+    ret = noncefp(nonce, pubkey->modulus);
     if (ret) {
-        mpz_inits(l1, l2, l3, NULL);
-        mpz_powm(l1, pubkey->generator, m, pubkey->bigModulus);
-        mpz_powm(l2, res->nonce, pubkey->modulus, pubkey->bigModulus);
-        mpz_mul(l3, l1, l2);
-        mpz_mod(res->message, l3, pubkey->bigModulus);
-        mpz_clears(l1, l2, l3, NULL);
+        secp256k1_paillier_encrypt_mpz_r(res, m, pubkey, nonce);
     }
+    mpz_clear(nonce);
     return ret;
 }
 

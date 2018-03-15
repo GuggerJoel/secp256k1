@@ -8,7 +8,7 @@
 #define SECP256K1_PAILLIER_H
 
 #include "include/secp256k1.h"
-#include "scalar.h"
+#include "num_gmp_impl.h"
 #include "scalar_impl.h"
 #include <gmp.h>
 
