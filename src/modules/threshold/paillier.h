@@ -154,6 +154,13 @@ void secp256k1_paillier_add(
     const secp256k1_paillier_pubkey *pubkey
 );
 
+void secp256k1_paillier_add_scalar(
+    secp256k1_paillier_encrypted_message *res,
+    const secp256k1_paillier_encrypted_message *op1,
+    const mpz_t op2,
+    const secp256k1_paillier_pubkey *pubkey
+);
+
 #ifdef __cplusplus
 }
 #endif

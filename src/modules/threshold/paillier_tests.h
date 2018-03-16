@@ -16,11 +16,11 @@ static int paillier_nonce_function(mpz_t nonce, const mpz_t max) {
     mpz_t gcd, seed; gmp_randstate_t r_state;
     counter = 0; fd = 0;
     mpz_inits(gcd, seed, NULL); gmp_randinit_mt(r_state);
-    /* A cryptographically secure random number generator is required */ 
-    /* to generate a key. This method will work on most Unix-like */ 
-    /* operating systems, but not on Windows operating systems. */ 
+    /* A cryptographically secure random number generator is required */
+    /* to generate a key. This method will work on most Unix-like */
+    /* operating systems, but not on Windows operating systems. */
     if ( (fd = open ("/dev/urandom", O_RDONLY)) == -1) {
-        return -1; 
+        return -1;
     }
     if (read(fd, rnd, 128) != 128 ) {
         if (close(fd)) {
@@ -50,7 +50,7 @@ const secp256k1_paillier_nonce_function secp256k1_paillier_nonce_function_defaul
 void run_paillier_tests(void) {
     size_t outlen = 0;
     unsigned char *out;
-    mpz_t res, scal;
+    mpz_t res, scal, scal2;
     secp256k1_paillier_pubkey *pubkey;
     secp256k1_paillier_pubkey *parsed_pubkey = secp256k1_paillier_pubkey_create();
     secp256k1_paillier_privkey *privkey = secp256k1_paillier_privkey_create();
@@ -574,8 +574,9 @@ void run_paillier_tests(void) {
         0x83, 0xf0, 0x25, 0xa8, 0x8d, 0xe8, 0x2e, 0x18
     };
 
-    mpz_inits(res, scal, NULL);
+    mpz_inits(res, scal, scal2, NULL);
     mpz_set_ui(scal, 10);
+    mpz_set_ui(scal2, 100);
 
     CHECK(secp256k1_paillier_privkey_parse(privkey, NULL, raw_privkey, 2596) == 1);
 
@@ -589,18 +590,22 @@ void run_paillier_tests(void) {
     secp256k1_paillier_mult(mult_message, enc_message, scal, pubkey);
     secp256k1_paillier_decrypt(res, mult_message, privkey);
     CHECK(mpz_cmp_ui(res, 100) == 0);
-    
+
     out = secp256k1_paillier_message_serialize(&outlen, enc_message);
     CHECK(secp256k1_paillier_message_parse(rec_message, out, outlen) == 1);
-    
+
     secp256k1_paillier_add(add_message, enc_message, enc_message, pubkey);
     secp256k1_paillier_decrypt(res, add_message, privkey);
     CHECK(mpz_cmp_ui(res, 20) == 0);
 
+    secp256k1_paillier_add_scalar(add_message, enc_message, scal2, pubkey);
+    secp256k1_paillier_decrypt(res, add_message, privkey);
+    CHECK(mpz_cmp_ui(res, 110) == 0);
+
     CHECK(secp256k1_paillier_privkey_parse(privkey, NULL, raw_w_privkey, 5) == 0);
     CHECK(secp256k1_paillier_privkey_parse(privkey, NULL, raw_w1_privkey, 1555) == 0);
     CHECK(secp256k1_paillier_privkey_parse(privkey, NULL, raw_w2_privkey, 1555) == 0);
-    
+
     CHECK(secp256k1_paillier_pubkey_parse(parsed_pubkey, raw_pubkey, 1041) == 1);
 
     secp256k1_paillier_privkey_destroy(privkey);
@@ -609,7 +614,7 @@ void run_paillier_tests(void) {
 
     CHECK(secp256k1_paillier_message_parse(enc_message, raw_encrypted_message, 1032) == 1);
 
-    mpz_clears(res, scal, NULL);
+    mpz_clears(res, scal, scal2, NULL);
 }
 
 #endif /* SECP256K1_MODULE_PAILLIER_TESTS_H */

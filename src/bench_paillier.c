@@ -30,6 +30,20 @@ typedef struct {
     mpz_t res;
 } bench_paillier_dec_data;
 
+typedef struct {
+    secp256k1_paillier_pubkey* pub;
+    secp256k1_paillier_encrypted_message* res;
+    secp256k1_paillier_encrypted_message* msg1;
+    secp256k1_paillier_encrypted_message* msg2;
+} bench_paillier_add_data;
+
+typedef struct {
+    secp256k1_paillier_pubkey* pub;
+    secp256k1_paillier_encrypted_message* res;
+    secp256k1_paillier_encrypted_message* msg1;
+    mpz_t msg2;
+} bench_paillier_add_scal_data;
+
 static int paillier_nonce_function(mpz_t nonce, const mpz_t max) {
     char rnd[128];
     int counter, fd;
@@ -395,6 +409,30 @@ static void bench_paillier_dec_setup(void* arg) {
     CHECK(secp256k1_paillier_message_parse(data->msg, raw_encrypted_message, 1032) == 1);
 }
 
+static void bench_paillier_add_setup(void* arg) {
+    bench_paillier_add_data *data = (bench_paillier_add_data*)arg;
+
+    data->pub = secp256k1_paillier_pubkey_create();
+    data->msg1 = secp256k1_paillier_message_create();
+    data->msg2 = secp256k1_paillier_message_create();
+    data->res = secp256k1_paillier_message_create();
+    CHECK(secp256k1_paillier_pubkey_parse(data->pub, raw_pubkey, 1041) == 1);
+    CHECK(secp256k1_paillier_message_parse(data->msg1, raw_encrypted_message, 1032) == 1);
+    CHECK(secp256k1_paillier_message_parse(data->msg2, raw_encrypted_message, 1032) == 1);
+}
+
+static void bench_paillier_add_scal_setup(void* arg) {
+    bench_paillier_add_scal_data *data = (bench_paillier_add_scal_data*)arg;
+
+    data->pub = secp256k1_paillier_pubkey_create();
+    data->msg1 = secp256k1_paillier_message_create();
+    data->res = secp256k1_paillier_message_create();
+    mpz_init(data->msg2);
+    CHECK(secp256k1_paillier_pubkey_parse(data->pub, raw_pubkey, 1041) == 1);
+    CHECK(secp256k1_paillier_message_parse(data->msg1, raw_encrypted_message, 1032) == 1);
+    mpz_set_ui(data->msg2, 10);
+}
+
 static void bench_paillier_enc_teardown(void* arg) {
     bench_paillier_enc_data *data = (bench_paillier_enc_data*)arg;
 
@@ -410,6 +448,24 @@ static void bench_paillier_dec_teardown(void* arg) {
     secp256k1_paillier_pubkey_destroy(data->pub);
     secp256k1_paillier_message_destroy(data->msg);
     mpz_clear(data->res);
+}
+
+static void bench_paillier_add_teardown(void* arg) {
+    bench_paillier_add_data *data = (bench_paillier_add_data*)arg;
+
+    secp256k1_paillier_pubkey_destroy(data->pub);
+    secp256k1_paillier_message_destroy(data->msg1);
+    secp256k1_paillier_message_destroy(data->msg2);
+    secp256k1_paillier_message_destroy(data->res);
+}
+
+static void bench_paillier_add_scal_teardown(void* arg) {
+    bench_paillier_add_scal_data *data = (bench_paillier_add_scal_data*)arg;
+
+    secp256k1_paillier_pubkey_destroy(data->pub);
+    secp256k1_paillier_message_destroy(data->msg1);
+    secp256k1_paillier_message_destroy(data->res);
+    mpz_clear(data->msg2);
 }
 
 static void bench_paillier_enc(void* arg) {
@@ -438,12 +494,37 @@ static void bench_paillier_dec(void* arg) {
     }
 }
 
+static void bench_paillier_add(void* arg) {
+    int i;
+    bench_paillier_add_data *data = (bench_paillier_add_data*)arg;
+
+    for (i = 0; i < 20000; i++) {
+        secp256k1_paillier_add(data->res, data->msg1, data->msg2, data->pub);
+        mpz_set(data->msg1->message, data->msg2->message);
+        mpz_set(data->msg2->message, data->res->message);
+    }
+}
+
+static void bench_paillier_add_scal(void* arg) {
+    int i;
+    bench_paillier_add_scal_data *data = (bench_paillier_add_scal_data*)arg;
+
+    for (i = 0; i < 20000; i++) {
+        secp256k1_paillier_add_scalar(data->res, data->msg1, data->msg2, data->pub);
+        mpz_add_ui(data->msg2, data->msg2, 10);
+    }
+}
+
 int main(void) {
     bench_paillier_enc_data enc_data;
     bench_paillier_dec_data dec_data;
+    bench_paillier_add_data add_data;
+    bench_paillier_add_scal_data add_scal_data;
 
     run_benchmark("paillier_enc", bench_paillier_enc, bench_paillier_enc_setup, bench_paillier_enc_teardown, &enc_data, 10, 100);
     run_benchmark("paillier_dec", bench_paillier_dec, bench_paillier_dec_setup, bench_paillier_dec_teardown, &dec_data, 10, 100);
+    run_benchmark("paillier_add", bench_paillier_add, bench_paillier_add_setup, bench_paillier_add_teardown, &add_data, 10, 20000);
+    run_benchmark("paillier_add_scal", bench_paillier_add_scal, bench_paillier_add_scal_setup, bench_paillier_add_scal_teardown, &add_scal_data, 10, 20000);
 
     return 0;
 }

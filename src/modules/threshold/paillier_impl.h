@@ -236,4 +236,13 @@ void secp256k1_paillier_add(secp256k1_paillier_encrypted_message *res, const sec
     mpz_clear(l1);
 }
 
+void secp256k1_paillier_add_scalar(secp256k1_paillier_encrypted_message *res, const secp256k1_paillier_encrypted_message *op1, const mpz_t op2, const secp256k1_paillier_pubkey *pubkey) {
+    mpz_t l1, l2;
+    mpz_inits(l1, l2, NULL);
+    mpz_powm(l1, pubkey->generator, op2, pubkey->bigModulus);
+    mpz_mul(l2, op1->message, l1);
+    mpz_mod(res->message, l2, pubkey->bigModulus);
+    mpz_clears(l1, l2, NULL);
+}
+
 #endif /* SECP256K1_MODULE_PAILLIER_MAIN_H */
